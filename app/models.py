@@ -76,6 +76,9 @@ class Matter(Base):
     current_next_date: Mapped[date | None] = mapped_column(Date, nullable=True, index=True)
     current_next_purpose: Mapped[str | None] = mapped_column(Text, nullable=True)
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    cnr: Mapped[str | None] = mapped_column(String(30), nullable=True, index=True)
+    ecourts_synced_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    ecourts_data_json: Mapped[str | None] = mapped_column(Text, nullable=True)
     is_demo: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=ist_now)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=ist_now, onupdate=ist_now)
@@ -508,4 +511,42 @@ class ImportBatch(Base):
     snapshot_path: Mapped[str | None] = mapped_column(String(500), nullable=True)
     imported_by: Mapped[str] = mapped_column(String(100), nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=ist_now)
+
+
+class ECourtsCaseCache(Base):
+    __tablename__ = "ecourts_case_cache"
+
+    cnr: Mapped[str] = mapped_column(String(30), primary_key=True)
+    case_number: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    court_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    stage_of_case: Mapped[str | None] = mapped_column(String(160), nullable=True)
+    next_hearing_date: Mapped[str | None] = mapped_column(String(30), nullable=True)
+    data_json: Mapped[str] = mapped_column(Text, nullable=False)
+    provisions_json: Mapped[str | None] = mapped_column(Text, nullable=True)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=ist_now)
+
+
+class ECourtsOrderCache(Base):
+    __tablename__ = "ecourts_order_cache"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    cnr: Mapped[str] = mapped_column(String(30), index=True, nullable=False)
+    filename: Mapped[str] = mapped_column(String(255), nullable=False)
+    order_date: Mapped[str | None] = mapped_column(String(40), nullable=True)
+    order_type: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    pdf_path: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    markdown_content: Mapped[str | None] = mapped_column(Text, nullable=True)
+    ai_analysis_json: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=ist_now)
+
+
+class ECourtsQueryCache(Base):
+    __tablename__ = "ecourts_query_cache"
+
+    cache_key: Mapped[str] = mapped_column(String(160), primary_key=True)
+    endpoint: Mapped[str] = mapped_column(String(120), nullable=False)
+    response_json: Mapped[str] = mapped_column(Text, nullable=False)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=ist_now)
+
 

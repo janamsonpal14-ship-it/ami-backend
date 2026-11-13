@@ -133,6 +133,10 @@ def matter_to_summary(matter: Matter) -> MatterSummaryOut:
         status=matter.status,
         current_next_date=matter.current_next_date,
         current_next_purpose=matter.current_next_purpose,
+        notes=matter.notes,
+        cnr=matter.cnr,
+        ecourts_synced_at=matter.ecourts_synced_at,
+        ecourts_data_json=matter.ecourts_data_json,
         clients=[
             MatterClientSummary(
                 client_id=link.client.id,
@@ -247,6 +251,7 @@ def create_matter(db: Session, payload: MatterCreate, actor: str) -> MatterSumma
         current_next_date=payload.current_next_date,
         current_next_purpose=payload.current_next_purpose,
         notes=payload.notes,
+        cnr=payload.cnr.strip().upper() if payload.cnr else None,
     )
     db.add(matter)
     db.flush()
@@ -325,6 +330,36 @@ def update_matter(db: Session, matter_id: int, payload: MatterUpdate, actor: str
     record_audit(db, actor=actor, entity_type="matter", entity_id=matter.id, action="update", after={"title": matter.title, "stage": matter.current_stage})
     db.commit()
     return get_matter_summary(db, matter.id)
+
+
+def delete_matter(db: Session, matter_id: int, actor: str) -> dict:
+    matter = db.scalar(
+        select(Matter)
+        .options(
+            selectinload(Matter.client_links),
+            selectinload(Matter.advocate_links),
+            selectinload(Matter.hearings),
+            selectinload(Matter.tasks),
+        )
+        .where(Matter.id == matter_id)
+    )
+    if matter is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Matter not found.")
+
+    deleted_title = matter.title
+    deleted_id = matter.id
+    record_audit(
+        db,
+        actor=actor,
+        entity_type="matter",
+        entity_id=deleted_id,
+        action="delete",
+        before={"title": matter.title, "case_number": matter.case_number},
+    )
+    db.delete(matter)
+    db.commit()
+    return {"status": "success", "deleted_matter_id": deleted_id, "title": deleted_title}
+
 
 
 def check_conflicts(db: Session, query: str) -> dict:

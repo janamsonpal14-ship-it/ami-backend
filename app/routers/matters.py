@@ -35,6 +35,7 @@ from app.services.matter_service import (
     create_client,
     create_matter,
     create_or_get_advocate,
+    delete_matter,
     find_possible_duplicate_matters,
     get_matter_summary,
     list_advocates,
@@ -150,6 +151,16 @@ def patch_matter(
     db: Session = Depends(get_db),
 ):
     return update_matter(db, matter_id, payload, actor=user.login_id)
+
+
+@router.delete("/matters/{matter_id}")
+def remove_matter(
+    matter_id: int,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    return delete_matter(db, matter_id, actor=user.login_id)
+
 
 
 @router.get("/matters/{matter_id}/hearings", response_model=list[HearingOut])

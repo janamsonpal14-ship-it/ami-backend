@@ -73,3 +73,17 @@ def ensure_additive_schema(target_engine=None) -> None:
             if "judgments_json" not in analysis_cols:
                 conn.exec_driver_sql("ALTER TABLE bare_act_ai_analysis ADD COLUMN judgments_json TEXT NOT NULL DEFAULT '[]';")
 
+        # Additive columns for eCourts integration on matters
+        if "matters" in tables:
+            matter_cols = {row[1] for row in conn.exec_driver_sql("PRAGMA table_info(matters);").fetchall()}
+            if "cnr" not in matter_cols:
+                conn.exec_driver_sql("ALTER TABLE matters ADD COLUMN cnr VARCHAR(30);")
+            if "ecourts_synced_at" not in matter_cols:
+                conn.exec_driver_sql("ALTER TABLE matters ADD COLUMN ecourts_synced_at DATETIME;")
+            if "ecourts_data_json" not in matter_cols:
+                conn.exec_driver_sql("ALTER TABLE matters ADD COLUMN ecourts_data_json TEXT;")
+
+        # Create eCourts cache tables if not present
+        Base.metadata.create_all(conn)
+
+

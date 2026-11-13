@@ -20,6 +20,14 @@ BARE_ACTS_DIR = UPLOADS_DIR / "bare_acts"
 EXPORTS_DIR = DATA_DIR / "exports"
 SNAPSHOTS_DIR = DATA_DIR / "snapshots"
 CACHE_DIR = DATA_DIR / "cache"
+ECOURTS_CACHE_DIR = CACHE_DIR / "ecourts"
+
+ECOURTS_API_BASE = os.environ.get("ECOURTS_API_BASE", "https://webapi.ecourtsindia.com")
+ECOURTS_API_KEY = (
+    os.environ.get("ECOURTS_API_KEY")
+    or os.environ.get("AMI_ECOURTS_API_KEY")
+    or "eci_live_8nag5t06sviatf9czai0zmcvecns0t3d"
+)
 
 
 def _resolve_db_path() -> Path:
@@ -69,6 +77,7 @@ def ensure_directories() -> None:
         EXPORTS_DIR,
         SNAPSHOTS_DIR,
         CACHE_DIR,
+        ECOURTS_CACHE_DIR,
     ):
         folder.mkdir(parents=True, exist_ok=True)
 

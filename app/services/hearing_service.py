@@ -386,7 +386,8 @@ def get_pending_eod_matters(db: Session, target_date: date | None = None) -> lis
                     "default_advocate_ids": [link.advocate_id for link in m.advocate_links],
                 }
             )
-    return pending
+    from app.services.ecourts_service import enrich_pending_eod_with_ecourts
+    return enrich_pending_eod_with_ecourts(db, pending)
 
 
 def batch_save_eod(db: Session, payload: BatchEodRequest, actor: str) -> list[HearingOut]:

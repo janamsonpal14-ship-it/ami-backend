@@ -130,6 +130,7 @@ class MatterCreate(BaseModel):
     current_next_date: date | None = None
     current_next_purpose: str | None = None
     notes: str | None = None
+    cnr: str | None = None
     clients: list[ClientLinkIn] = Field(min_length=1)
     advocate_ids: list[int] = Field(default_factory=list)
     allow_duplicate: bool = False
@@ -146,6 +147,7 @@ class MatterUpdate(BaseModel):
     current_next_date: date | None = None
     current_next_purpose: str | None = None
     notes: str | None = None
+    cnr: str | None = None
     clients: list[ClientLinkIn] | None = None
     advocate_ids: list[int] | None = None
 
@@ -168,6 +170,10 @@ class MatterSummaryOut(BaseModel):
     status: str
     current_next_date: date | None = None
     current_next_purpose: str | None = None
+    notes: str | None = None
+    cnr: str | None = None
+    ecourts_synced_at: datetime | None = None
+    ecourts_data_json: str | None = None
     clients: list[MatterClientSummary]
     advocates: list[AdvocateOut]
     is_demo: bool

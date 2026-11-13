@@ -7,7 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import ensure_directories
 from app.database import Base, SessionLocal, engine, ensure_additive_schema
-from app.routers import auth, calendar, home, law, matters, memos, system, tasks
+from app.routers import auth, calendar, ecourts, home, law, matters, memos, system, tasks
 from app.services.seed_service import ensure_seed_data
 
 
@@ -51,5 +51,6 @@ app.include_router(matters.router)
 app.include_router(tasks.router)
 app.include_router(memos.router)
 app.include_router(law.router)
+app.include_router(ecourts.router)
 app.include_router(system.router)
 
