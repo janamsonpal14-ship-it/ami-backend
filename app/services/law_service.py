@@ -1136,7 +1136,7 @@ def get_research_status(db: Session) -> dict:
         "disclaimer_accepted": False,
         "mode": "Strict Uploaded Bare Acts Search",
         "message": (
-            "AMICO Legal Search operates strictly offline on your uploaded local Bare Acts PDFs & text entries. "
+            "AMI Legal Search operates strictly offline on your uploaded local Bare Acts PDFs & text entries. "
             "No third-party AI or external search APIs are used."
         ),
         "confidentiality_guarantee": (
@@ -1147,7 +1147,7 @@ def get_research_status(db: Session) -> dict:
 
 
 def update_research_config(db: Session, payload: ResearchConfigUpdate, actor: str) -> dict:
-    """Reject third-party AI enablement: AMICO Legal Search strictly uses uploaded Bare Acts only."""
+    """Reject third-party AI enablement: AMI Legal Search strictly uses uploaded Bare Acts only."""
     if payload.ai_enabled or (payload.provider and payload.provider != "local_bare_acts"):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -1263,7 +1263,8 @@ def _resolve_ai_credentials() -> tuple[str, str, str | None]:
     Default provider: gemini with gemini-1.5-flash (or openai with gpt-4o-mini).
     """
     key = (
-        os.environ.get("AMICO_AI_API_KEY")
+        os.environ.get("AMI_AI_API_KEY")
+        or os.environ.get("AMICO_AI_API_KEY")
         or os.environ.get("GEMINI_API_KEY")
         or os.environ.get("OPENAI_API_KEY")
     )
@@ -1321,7 +1322,7 @@ def _generate_ai_statutory_analysis(
             f"{section_no} of the {act_title}{year_str} governs matters concerning '{heading}'. "
             f"The statutory language establishes express rules, conditions, and procedures enacted by the legislature. "
             f"[Note: External AI interpretation is currently in local/unconfigured mode. To enable live cloud AI analysis, "
-            f"configure your prepaid API key in AMICO settings. The statutory provision and original PDF viewer above remain fully accessible.]"
+            f"configure your prepaid API key in AMI settings. The statutory provision and original PDF viewer above remain fully accessible.]"
         )
         characteristics = [
             f"Statutory Authority: Enacted under {section_no} of {act_title}{year_str}.",
@@ -1426,6 +1427,7 @@ def _fetch_verified_kanoon_judgments(
     """
     token = (
         os.environ.get("INDIAN_KANOON_API_TOKEN")
+        or os.environ.get("AMI_KANOON_TOKEN")
         or os.environ.get("AMICO_KANOON_TOKEN")
     )
     if not token:

@@ -22,7 +22,7 @@ async def lifespan(_app: FastAPI):
 
 
 app = FastAPI(
-    title="AMICO API",
+    title="AMI API",
     description="Private Legal Office Management System Backend (Phase 4)",
     version="1.3.0-phase4",
     lifespan=lifespan,
@@ -40,7 +40,7 @@ app.add_middleware(
 
 @app.get("/api/health")
 def health_check():
-    return {"status": "ok", "app": "AMICO", "phase": 4}
+    return {"status": "ok", "app": "AMI", "phase": 4}
 
 
 app.include_router(auth.router)

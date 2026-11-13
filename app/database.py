@@ -10,7 +10,7 @@ from app.config import DB_PATH, ensure_directories
 
 
 class Base(DeclarativeBase):
-    """SQLAlchemy declarative base for AMICO models."""
+    """SQLAlchemy declarative base for AMI models."""
 
 
 def create_sqlite_engine(db_path: Path | str | None = None):

@@ -91,7 +91,7 @@ def export_backup_bundle(db: Session, *, actor: str) -> tuple[bytes, str]:
     counts = _table_counts(db)
 
     stamp = ist_now().strftime("%Y%m%d_%H%M%S")
-    filename = f"AMICO_Backup_{stamp}.zip"
+    filename = f"AMI_Backup_{stamp}.zip"
 
     with tempfile.TemporaryDirectory() as tmpdir:
         tmp_db = Path(tmpdir) / "amico.db"
@@ -119,7 +119,7 @@ def export_backup_bundle(db: Session, *, actor: str) -> tuple[bytes, str]:
                         zf.writestr(rel, item_bytes)
 
             manifest = {
-                "app": "AMICO",
+                "app": "AMI",
                 "schema_version": 1,
                 "created_at": ist_now().isoformat(),
                 "created_by": actor,
@@ -133,13 +133,13 @@ def export_backup_bundle(db: Session, *, actor: str) -> tuple[bytes, str]:
 
 
 def _validate_zip_member_path(member_name: str) -> Path | None:
-    """Reject symlinks/path traversal; permit only manifest.json, amico.db (or legacy velora.db/advocateos.db), and uploads/*."""
+    """Reject symlinks/path traversal; permit only manifest.json, ami.db, amico.db (or legacy velora.db/advocateos.db), and uploads/*."""
     if "\\" in member_name or member_name.startswith("/"):
         return None
     rel = Path(member_name)
     if rel.is_absolute() or ".." in rel.parts:
         return None
-    if member_name in ("manifest.json", "amico.db", "velora.db", "advocateos.db"):
+    if member_name in ("manifest.json", "ami.db", "amico.db", "velora.db", "advocateos.db"):
         return rel
     if len(rel.parts) >= 2 and rel.parts[0] == "uploads":
         return rel

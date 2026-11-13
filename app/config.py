@@ -7,7 +7,8 @@ from zoneinfo import ZoneInfo
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 DATA_DIR = Path(
-    os.environ.get("AMICO_DATA_DIR")
+    os.environ.get("AMI_DATA_DIR")
+    or os.environ.get("AMICO_DATA_DIR")
     or os.environ.get("VELORA_DATA_DIR")
     or os.environ.get("ADVOCATEOS_DATA_DIR")
     or (BASE_DIR / "data")
@@ -23,7 +24,8 @@ CACHE_DIR = DATA_DIR / "cache"
 
 def _resolve_db_path() -> Path:
     explicit = (
-        os.environ.get("AMICO_DB_PATH")
+        os.environ.get("AMI_DB_PATH")
+        or os.environ.get("AMICO_DB_PATH")
         or os.environ.get("VELORA_DB_PATH")
         or os.environ.get("ADVOCATEOS_DB_PATH")
     )
@@ -74,7 +76,8 @@ def ensure_directories() -> None:
 def get_jwt_secret() -> str:
     """Load JWT secret from environment or persistent local secret file."""
     env_secret = (
-        os.environ.get("AMICO_JWT_SECRET")
+        os.environ.get("AMI_JWT_SECRET")
+        or os.environ.get("AMICO_JWT_SECRET")
         or os.environ.get("VELORA_JWT_SECRET")
         or os.environ.get("ADVOCATEOS_JWT_SECRET")
     )

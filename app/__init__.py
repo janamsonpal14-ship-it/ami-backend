@@ -1,2 +1,2 @@
-# AMICO Backend Package
+# AMI Backend Package
 
