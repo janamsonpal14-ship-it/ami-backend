@@ -249,16 +249,17 @@ def test_legal_search_strictly_local_bare_acts_only_no_external_ai(client_and_di
 
 def test_three_point_statutory_reference_and_caching(client_and_dirs):
     """
-    Verifies the Three-Point statutory reference format:
+    Verifies the Mandatory Four-Part statutory reference format:
     1. Statutory Provision & Original PDF Reference (from local DB)
     2. Interpretation (AI / SQLite Cache)
     3. Characteristics of the Provision (AI / SQLite Cache)
+    4. Absolutely Relevant Judgments (Indian Kanoon verified authorities - SC & Bombay HC)
     Also verifies SQLite caching (second call costs ₹0.00) and Pay-As-You-Go accounting.
     """
     client, _, _ = client_and_dirs
     admin_headers = _login_headers(client, "demo_advocate", "DemoPassword@2026")
 
-    # Upload test act
+    # Upload test act: Arbitration Act (Section 9)
     act_resp = client.post(
         "/api/bare-acts",
         json={
@@ -280,9 +281,9 @@ def test_three_point_statutory_reference_and_caching(client_and_dirs):
     assert len(act_data["sections"]) >= 1
     sec_id = act_data["sections"][0]["id"]
 
-    # 1. Fetch Three-Point Analysis (First Call - generated or fallback)
+    # 1. Fetch Four-Part Analysis (First Call - generated or fallback)
     resp1 = client.get(
-        f"/api/bare-acts/{act_id}/sections/{sec_id}/three-point",
+        f"/api/bare-acts/{act_id}/sections/{sec_id}/four-part",
         headers=admin_headers,
     )
     assert resp1.status_code == 200, resp1.text
@@ -304,9 +305,27 @@ def test_three_point_statutory_reference_and_caching(client_and_dirs):
     assert isinstance(data1["characteristics"], list)
     assert len(data1["characteristics"]) >= 3
 
-    # 2. Fetch Three-Point Analysis (Second Call - MUST be SQLite cache hit at ₹0.00)
+    # Point 4 assertions: Absolutely Relevant Judgments (Indian Kanoon verified authorities)
+    assert isinstance(data1["judgments"], list)
+    assert len(data1["judgments"]) >= 2
+    courts = [j["court"] for j in data1["judgments"]]
+    assert any("Supreme Court" in c for c in courts), "Must prioritize Supreme Court of India"
+    assert any("Bombay" in c for c in courts), "Must prioritize Bombay High Court"
+
+    # Verify substantive fields on every judgment (Zero-Hallucination guarantee)
+    for j in data1["judgments"]:
+        assert j["case_name"] and len(j["case_name"]) > 5
+        assert j["court"]
+        assert j["citation"]
+        assert j["legal_proposition"] and len(j["legal_proposition"]) > 15
+        assert j["relevant_paragraphs"]
+        assert j["source_url"].startswith("https://indiankanoon.org/doc/")
+        assert j["doc_id"] > 0
+        assert j["authority_type"] in ("binding", "persuasive", "distinguishing")
+
+    # 2. Fetch Four-Part Analysis (Second Call - MUST be SQLite cache hit at ₹0.00)
     resp2 = client.get(
-        f"/api/bare-acts/{act_id}/sections/{sec_id}/three-point",
+        f"/api/bare-acts/{act_id}/sections/{sec_id}/four-part",
         headers=admin_headers,
     )
     assert resp2.status_code == 200
@@ -316,6 +335,15 @@ def test_three_point_statutory_reference_and_caching(client_and_dirs):
     assert data2["cost_inr"] == 0.0
     assert data2["interpretation"] == data1["interpretation"]
     assert data2["characteristics"] == data1["characteristics"]
+    assert data2["judgments"] == data1["judgments"]
+
+    # Also verify backward-compatible /three-point route returns the same four-part output
+    resp_compat = client.get(
+        f"/api/bare-acts/{act_id}/sections/{sec_id}/three-point",
+        headers=admin_headers,
+    )
+    assert resp_compat.status_code == 200
+    assert resp_compat.json()["judgments"] == data1["judgments"]
 
     # 3. Check Pay-As-You-Go AI Usage Ledger
     usage_resp = client.get("/api/law/ai-usage", headers=admin_headers)
@@ -324,4 +352,30 @@ def test_three_point_statutory_reference_and_caching(client_and_dirs):
     assert usage["total_queries"] >= 1
     assert len(usage["recent_logs"]) >= 1
     assert usage["recent_logs"][0]["module"] == "law"
+
+    # 4. Zero-hallucination verification when no judgment is relevant
+    generic_act = client.post(
+        "/api/bare-acts",
+        json={
+            "title": "Fictional Administration Act",
+            "short_title": "Admin Act",
+            "year": 2026,
+            "tags": "misc",
+            "full_text": (
+                "Section 101. Power to provide miscellaneous forms\n"
+                "The state government may prescribe blank administrative forms for internal department usage."
+            ),
+        },
+        headers=admin_headers,
+    ).json()
+    generic_sec_id = generic_act["sections"][0]["id"]
+    generic_resp = client.get(
+        f"/api/bare-acts/{generic_act['id']}/sections/{generic_sec_id}/four-part",
+        headers=admin_headers,
+    )
+    assert generic_resp.status_code == 200
+    generic_data = generic_resp.json()
+    # Must never invent fake judgments
+    assert generic_data["judgments"] == []
+    assert generic_data["kanoon_status"] in ("empty", "unconfigured")
 

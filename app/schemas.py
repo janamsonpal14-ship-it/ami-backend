@@ -547,9 +547,22 @@ class ResearchAskRequest(BaseModel):
     use_external_ai: bool = False
 
 
-# --- Three-Point Statutory Analysis & AI Usage Ledger ---
+# --- Four-Part Statutory Analysis & AI Usage Ledger ---
 
-class ThreePointAnalysisOut(BaseModel):
+class JudgmentOut(BaseModel):
+    case_name: str
+    court: str
+    decision_date: str | None = None
+    citation: str | None = None
+    legal_proposition: str
+    relevant_paragraphs: str | None = None
+    source_url: str | None = None
+    doc_id: int | None = None
+    authority_type: str = "binding"  # binding | persuasive | distinguishing | adverse | benchmark
+    relevance_note: str | None = None
+
+
+class FourPartAnalysisOut(BaseModel):
     act_id: int
     act_title: str
     short_title: str | None = None
@@ -563,14 +576,20 @@ class ThreePointAnalysisOut(BaseModel):
     statutory_text: str
     interpretation: str
     characteristics: list[str] = Field(default_factory=list)
+    judgments: list[JudgmentOut] = Field(default_factory=list)
     is_cached: bool = False
     cached_at: str | None = None
     model_used: str = ""
     ai_status: str = "ready"  # ready | cached | generated | unconfigured | error | fallback
+    kanoon_status: str = "verified"  # verified | unconfigured | empty | error
     cost_inr: float = 0.0
     prompt_tokens: int = 0
     completion_tokens: int = 0
     error_message: str | None = None
+
+
+# Backward-compatibility alias
+ThreePointAnalysisOut = FourPartAnalysisOut
 
 
 class AIUsageSummaryOut(BaseModel):

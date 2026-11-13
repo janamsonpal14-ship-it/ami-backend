@@ -455,6 +455,7 @@ class BareActAIAnalysis(Base):
     doc_hash: Mapped[str] = mapped_column(String(64), default="", nullable=False)
     interpretation: Mapped[str] = mapped_column(Text, nullable=False)
     characteristics_json: Mapped[str] = mapped_column(Text, nullable=False)  # JSON array of strings
+    judgments_json: Mapped[str] = mapped_column(Text, default="[]", nullable=False)  # JSON array of verified judgments
     prompt_tokens: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     completion_tokens: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     cost_inr: Mapped[float] = mapped_column(Float, default=0.0, nullable=False)

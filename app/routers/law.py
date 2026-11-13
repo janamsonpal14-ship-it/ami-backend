@@ -11,6 +11,7 @@ from app.schemas import (
     BareActCreate,
     BareActDetailOut,
     BareActOut,
+    FourPartAnalysisOut,
     ResearchAskRequest,
     ResearchConfigUpdate,
     ThreePointAnalysisOut,
@@ -200,8 +201,9 @@ def get_research_history(
     return list_research_history(db, limit=limit)
 
 
-@router.get("/bare-acts/{act_id}/sections/{section_id}/three-point", response_model=ThreePointAnalysisOut)
-def read_section_three_point_analysis(
+@router.get("/bare-acts/{act_id}/sections/{section_id}/four-part", response_model=FourPartAnalysisOut)
+@router.get("/bare-acts/{act_id}/sections/{section_id}/three-point", response_model=FourPartAnalysisOut)
+def read_section_four_part_analysis(
     act_id: int,
     section_id: int,
     regenerate: bool = Query(False),
@@ -209,10 +211,11 @@ def read_section_three_point_analysis(
     db: Session = Depends(get_db),
 ):
     """
-    Returns the mandatory Three-Point statutory reference:
+    Returns the mandatory Four-Part statutory reference:
     1. Statutory Provision & Original PDF Page Reference
     2. Interpretation
     3. Characteristics of the Provision
+    4. Absolutely Relevant Judgments (Indian Kanoon verified authorities)
     """
     return get_three_point_analysis(db, act_id, section_id, regenerate=regenerate, actor=user.login_id)
 

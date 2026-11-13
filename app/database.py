@@ -66,3 +66,10 @@ def ensure_additive_schema(target_engine=None) -> None:
         if "section_count" not in cols:
             conn.exec_driver_sql("ALTER TABLE bare_acts ADD COLUMN section_count INTEGER NOT NULL DEFAULT 0;")
 
+        # Additive column for Part 4 judgments cache
+        tables = {row[0] for row in conn.exec_driver_sql("SELECT name FROM sqlite_master WHERE type='table';").fetchall()}
+        if "bare_act_ai_analysis" in tables:
+            analysis_cols = {row[1] for row in conn.exec_driver_sql("PRAGMA table_info(bare_act_ai_analysis);").fetchall()}
+            if "judgments_json" not in analysis_cols:
+                conn.exec_driver_sql("ALTER TABLE bare_act_ai_analysis ADD COLUMN judgments_json TEXT NOT NULL DEFAULT '[]';")
+
