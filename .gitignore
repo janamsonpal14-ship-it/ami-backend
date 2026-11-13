@@ -22,3 +22,6 @@ data/snapshots/
 # eCourts API Test Results
 ecourts_test_results/
 
+# Indian Kanoon API Test Results
+indian_kanoon_test_results/
+

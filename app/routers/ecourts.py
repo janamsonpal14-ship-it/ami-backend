@@ -280,3 +280,4 @@ def api_link_cnr(
         force_refresh=payload.sync_immediately,
         actor=user.login_id,
     )
+
