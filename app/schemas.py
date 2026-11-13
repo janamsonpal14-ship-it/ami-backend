@@ -546,3 +546,41 @@ class ResearchAskRequest(BaseModel):
     act_ids: list[int] = Field(default_factory=list)
     use_external_ai: bool = False
 
+
+# --- Three-Point Statutory Analysis & AI Usage Ledger ---
+
+class ThreePointAnalysisOut(BaseModel):
+    act_id: int
+    act_title: str
+    short_title: str | None = None
+    year: int | None = None
+    section_id: int
+    section_no: str
+    heading: str
+    page_number: int
+    page_count: int = 0
+    has_file: bool = False
+    statutory_text: str
+    interpretation: str
+    characteristics: list[str] = Field(default_factory=list)
+    is_cached: bool = False
+    cached_at: str | None = None
+    model_used: str = ""
+    ai_status: str = "ready"  # ready | cached | generated | unconfigured | error | fallback
+    cost_inr: float = 0.0
+    prompt_tokens: int = 0
+    completion_tokens: int = 0
+    error_message: str | None = None
+
+
+class AIUsageSummaryOut(BaseModel):
+    total_queries: int = 0
+    total_prompt_tokens: int = 0
+    total_completion_tokens: int = 0
+    total_cost_inr: float = 0.0
+    total_cost_usd: float = 0.0
+    month_to_date_cost_inr: float = 0.0
+    month_to_date_queries: int = 0
+    recent_logs: list[dict] = Field(default_factory=list)
+
+

@@ -6,16 +6,26 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.models import User
-from app.schemas import BareActCreate, BareActDetailOut, BareActOut, ResearchAskRequest, ResearchConfigUpdate
+from app.schemas import (
+    AIUsageSummaryOut,
+    BareActCreate,
+    BareActDetailOut,
+    BareActOut,
+    ResearchAskRequest,
+    ResearchConfigUpdate,
+    ThreePointAnalysisOut,
+)
 from app.services.auth_service import get_current_user, require_admin
 from app.services.law_service import (
     ask_legal_research,
     create_bare_act_from_text,
     delete_bare_act,
+    get_ai_usage_stats,
     get_bare_act_detail,
     get_bare_act_file,
     get_bare_act_page_text,
     get_research_status,
+    get_three_point_analysis,
     list_bare_acts,
     list_research_history,
     render_bare_act_pdf_page,
@@ -188,3 +198,30 @@ def get_research_history(
     db: Session = Depends(get_db),
 ):
     return list_research_history(db, limit=limit)
+
+
+@router.get("/bare-acts/{act_id}/sections/{section_id}/three-point", response_model=ThreePointAnalysisOut)
+def read_section_three_point_analysis(
+    act_id: int,
+    section_id: int,
+    regenerate: bool = Query(False),
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """
+    Returns the mandatory Three-Point statutory reference:
+    1. Statutory Provision & Original PDF Page Reference
+    2. Interpretation
+    3. Characteristics of the Provision
+    """
+    return get_three_point_analysis(db, act_id, section_id, regenerate=regenerate, actor=user.login_id)
+
+
+@router.get("/law/ai-usage", response_model=AIUsageSummaryOut)
+def read_law_ai_usage(
+    _user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Returns Pay-As-You-Go AI usage statistics, tokens consumed, and cumulative expenditure."""
+    return get_ai_usage_stats(db)
+

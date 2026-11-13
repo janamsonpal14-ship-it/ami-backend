@@ -7,6 +7,7 @@ from sqlalchemy import (
     Boolean,
     Date,
     DateTime,
+    Float,
     ForeignKey,
     Integer,
     Numeric,
@@ -437,6 +438,50 @@ class ResearchQueryLog(Base):
     answer_text: Mapped[str] = mapped_column(Text, nullable=False)
     citations_json: Mapped[str] = mapped_column(Text, default="[]", nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=ist_now)
+
+
+class BareActAIAnalysis(Base):
+    """Cached AI statutory analysis (interpretation and characteristics) per provision."""
+
+    __tablename__ = "bare_act_ai_analysis"
+    __table_args__ = (
+        UniqueConstraint("act_id", "section_id", name="uq_bare_act_section_analysis"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    act_id: Mapped[int] = mapped_column(ForeignKey("bare_acts.id", ondelete="CASCADE"), nullable=False, index=True)
+    section_id: Mapped[int] = mapped_column(ForeignKey("bare_act_sections.id", ondelete="CASCADE"), nullable=False, index=True)
+    model_id: Mapped[str] = mapped_column(String(120), default="", nullable=False)
+    doc_hash: Mapped[str] = mapped_column(String(64), default="", nullable=False)
+    interpretation: Mapped[str] = mapped_column(Text, nullable=False)
+    characteristics_json: Mapped[str] = mapped_column(Text, nullable=False)  # JSON array of strings
+    prompt_tokens: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    completion_tokens: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    cost_inr: Mapped[float] = mapped_column(Float, default=0.0, nullable=False)
+    schema_version: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=ist_now)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=ist_now, onupdate=ist_now)
+
+    act: Mapped[BareAct] = relationship()
+    section: Mapped[BareActSection] = relationship()
+
+
+class AIUsageLedger(Base):
+    """Accurate Pay-As-You-Go usage accounting for AI requests (tokens, costs, and status)."""
+
+    __tablename__ = "ai_usage_ledger"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    timestamp: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=ist_now, index=True)
+    module: Mapped[str] = mapped_column(String(60), default="law", nullable=False)
+    model_id: Mapped[str] = mapped_column(String(120), default="", nullable=False)
+    prompt_tokens: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    cached_tokens: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    completion_tokens: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    cost_inr: Mapped[float] = mapped_column(Float, default=0.0, nullable=False)
+    cost_usd: Mapped[float] = mapped_column(Float, default=0.0, nullable=False)
+    status: Mapped[str] = mapped_column(String(40), default="success", nullable=False)
+    error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
 
 
 class AuditEvent(Base):

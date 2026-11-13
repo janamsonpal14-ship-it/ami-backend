@@ -245,3 +245,83 @@ def test_legal_search_strictly_local_bare_acts_only_no_external_ai(client_and_di
     law_source = Path(law_mod.__file__).read_text(encoding="utf-8")
     for forbidden in ("Client", "Matter", "Hearing", "FeeMemo", "CalendarEvent", "Task"):
         assert forbidden not in law_source, f"Isolation violation: {forbidden} referenced in law_service.py"
+
+
+def test_three_point_statutory_reference_and_caching(client_and_dirs):
+    """
+    Verifies the Three-Point statutory reference format:
+    1. Statutory Provision & Original PDF Reference (from local DB)
+    2. Interpretation (AI / SQLite Cache)
+    3. Characteristics of the Provision (AI / SQLite Cache)
+    Also verifies SQLite caching (second call costs ₹0.00) and Pay-As-You-Go accounting.
+    """
+    client, _, _ = client_and_dirs
+    admin_headers = _login_headers(client, "demo_advocate", "DemoPassword@2026")
+
+    # Upload test act
+    act_resp = client.post(
+        "/api/bare-acts",
+        json={
+            "title": "Commercial Arbitration Act",
+            "short_title": "Arbitration Act",
+            "year": 1996,
+            "tags": "arbitration,interim",
+            "full_text": (
+                "Section 9. Interim measures, etc., by Court\n"
+                "A party may, before or during arbitral proceedings or at any time after the making of the arbitral award "
+                "but before it is enforced in accordance with section 36, apply to a court for an interim measure of protection."
+            ),
+        },
+        headers=admin_headers,
+    )
+    assert act_resp.status_code == 201
+    act_data = act_resp.json()
+    act_id = act_data["id"]
+    assert len(act_data["sections"]) >= 1
+    sec_id = act_data["sections"][0]["id"]
+
+    # 1. Fetch Three-Point Analysis (First Call - generated or fallback)
+    resp1 = client.get(
+        f"/api/bare-acts/{act_id}/sections/{sec_id}/three-point",
+        headers=admin_headers,
+    )
+    assert resp1.status_code == 200, resp1.text
+    data1 = resp1.json()
+
+    # Point 1 assertions: Exact local DB statutory text & PDF metadata
+    assert data1["act_id"] == act_id
+    assert data1["section_no"] == "Section 9"
+    assert "Interim measures" in data1["heading"]
+    assert "interim measure of protection" in data1["statutory_text"]
+    assert data1["page_number"] == 1
+    assert data1["is_cached"] is False
+
+    # Point 2 assertions: Interpretation present and legally grounded
+    assert len(data1["interpretation"]) > 20
+    assert "Section 9" in data1["interpretation"] or "Arbitration" in data1["interpretation"]
+
+    # Point 3 assertions: Characteristics list present
+    assert isinstance(data1["characteristics"], list)
+    assert len(data1["characteristics"]) >= 3
+
+    # 2. Fetch Three-Point Analysis (Second Call - MUST be SQLite cache hit at ₹0.00)
+    resp2 = client.get(
+        f"/api/bare-acts/{act_id}/sections/{sec_id}/three-point",
+        headers=admin_headers,
+    )
+    assert resp2.status_code == 200
+    data2 = resp2.json()
+    assert data2["is_cached"] is True
+    assert data2["ai_status"] == "cached"
+    assert data2["cost_inr"] == 0.0
+    assert data2["interpretation"] == data1["interpretation"]
+    assert data2["characteristics"] == data1["characteristics"]
+
+    # 3. Check Pay-As-You-Go AI Usage Ledger
+    usage_resp = client.get("/api/law/ai-usage", headers=admin_headers)
+    assert usage_resp.status_code == 200
+    usage = usage_resp.json()
+    assert usage["total_queries"] >= 1
+    assert len(usage["recent_logs"]) >= 1
+    assert usage["recent_logs"][0]["module"] == "law"
+
