@@ -294,3 +294,4 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     run_ingestion(cohort_filter=args.cohort, dry_run=args.dry_run, limit=args.limit)
+

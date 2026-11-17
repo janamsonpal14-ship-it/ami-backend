@@ -2172,3 +2172,4 @@ def generate_manifest() -> Path:
 
 if __name__ == "__main__":
     generate_manifest()
+
