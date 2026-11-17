@@ -38,6 +38,11 @@ app.add_middleware(
 )
 
 
+@app.get("/")
+def root():
+    return {"status": "ok", "app": "AMI", "phase": 4, "message": "AMI Legal Backend is live"}
+
+
 @app.get("/api/health")
 def health_check():
     return {"status": "ok", "app": "AMI", "phase": 4}

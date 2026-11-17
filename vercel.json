@@ -1,14 +1,7 @@
 {
   "version": 2,
-  "rewrites": [
-    {
-      "source": "/(.*)",
-      "destination": "/api/index.py"
-    }
-  ],
   "env": {
     "AMI_DATA_DIR": "/tmp/data",
     "PYTHONUNBUFFERED": "1"
   }
 }
-
