@@ -13,15 +13,19 @@ from app.schemas import FeeMemoCreate, FeeMemoOut, FeeMemoUpdate, MemoQuickStatu
 from app.services.auth_service import get_current_user
 from app.services.billing_service import (
     create_memo,
+    delete_memo,
+    get_fee_schedule,
     get_memo,
     issue_memo,
     list_memos,
     record_payment,
     set_memo_quick_status,
+    update_fee_schedule,
     update_memo,
     void_memo,
 )
 from app.services.memo_exporter import (
+    delete_letterhead,
     export_memo_docx,
     export_memo_pdf,
     list_letterheads,
@@ -30,6 +34,24 @@ from app.services.memo_exporter import (
 )
 
 router = APIRouter(prefix="/api", tags=["fee_memos_and_letterheads"])
+
+
+@router.get("/memos/fee-schedule")
+def api_get_fee_schedule(
+    _user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    return get_fee_schedule(db)
+
+
+@router.put("/memos/fee-schedule")
+@router.post("/memos/fee-schedule")
+def api_update_fee_schedule(
+    items: list[dict],
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    return update_fee_schedule(db, items, actor=user.login_id)
 
 
 @router.get("/memos", response_model=list[FeeMemoOut])
@@ -67,6 +89,15 @@ def patch_memo(
     db: Session = Depends(get_db),
 ):
     return update_memo(db, memo_id, payload, actor=user.login_id)
+
+
+@router.delete("/memos/{memo_id}")
+def api_delete_memo(
+    memo_id: int,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    return delete_memo(db, memo_id, actor=user.login_id)
 
 
 @router.post("/memos/{memo_id}/issue", response_model=FeeMemoOut)
@@ -214,3 +245,12 @@ def get_letterhead_image(
     if not img_path.exists():
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Letterhead image not found.")
     return FileResponse(img_path)
+
+
+@router.delete("/letterheads/{letterhead_id}")
+def delete_letterhead_endpoint(
+    letterhead_id: int,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    return delete_letterhead(db, letterhead_id, actor=user.login_id)

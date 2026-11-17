@@ -25,6 +25,7 @@ from app.schemas import (
 from app.services.auth_service import get_current_user
 from app.services.hearing_service import (
     batch_save_eod,
+    delete_hearing,
     get_pending_eod_matters,
     list_matter_hearings,
     mark_not_reached,
@@ -208,4 +209,15 @@ def post_batch_eod(
     db: Session = Depends(get_db),
 ):
     return batch_save_eod(db, payload, actor=user.login_id)
+
+
+@router.delete("/hearings/{hearing_id}")
+@router.delete("/matters/{matter_id}/hearings/{hearing_id}")
+def remove_hearing(
+    hearing_id: int,
+    matter_id: int | None = None,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    return delete_hearing(db, hearing_id, actor=user.login_id)
 

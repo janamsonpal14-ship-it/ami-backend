@@ -65,6 +65,18 @@ def ensure_additive_schema(target_engine=None) -> None:
             conn.exec_driver_sql("ALTER TABLE bare_acts ADD COLUMN page_count INTEGER NOT NULL DEFAULT 0;")
         if "section_count" not in cols:
             conn.exec_driver_sql("ALTER TABLE bare_acts ADD COLUMN section_count INTEGER NOT NULL DEFAULT 0;")
+        if "act_no" not in cols:
+            conn.exec_driver_sql("ALTER TABLE bare_acts ADD COLUMN act_no VARCHAR(40);")
+        if "category_slug" not in cols:
+            conn.exec_driver_sql("ALTER TABLE bare_acts ADD COLUMN category_slug VARCHAR(100);")
+        if "enactment_date" not in cols:
+            conn.exec_driver_sql("ALTER TABLE bare_acts ADD COLUMN enactment_date DATE;")
+        if "commencement_date" not in cols:
+            conn.exec_driver_sql("ALTER TABLE bare_acts ADD COLUMN commencement_date DATE;")
+        if "source_url" not in cols:
+            conn.exec_driver_sql("ALTER TABLE bare_acts ADD COLUMN source_url VARCHAR(500);")
+        if "sha256_hash" not in cols:
+            conn.exec_driver_sql("ALTER TABLE bare_acts ADD COLUMN sha256_hash VARCHAR(64);")
 
         # Additive column for Part 4 judgments cache
         tables = {row[0] for row in conn.exec_driver_sql("SELECT name FROM sqlite_master WHERE type='table';").fetchall()}

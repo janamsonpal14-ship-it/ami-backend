@@ -368,6 +368,7 @@ class OfficeSettings(Base):
     bill_number_prefix: Mapped[str] = mapped_column(String(40), default="AO/2026-27/", nullable=False)
     next_bill_seq: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
     default_bank_details: Mapped[str | None] = mapped_column(Text, nullable=True)
+    fee_schedule_json: Mapped[str | None] = mapped_column(Text, nullable=True)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=ist_now, onupdate=ist_now)
 
 
@@ -377,10 +378,16 @@ class BareAct(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     title: Mapped[str] = mapped_column(String(250), nullable=False)
     short_title: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    act_no: Mapped[str | None] = mapped_column(String(40), nullable=True)
     year: Mapped[int | None] = mapped_column(Integer, nullable=True)
     jurisdiction: Mapped[str] = mapped_column(String(80), default="India", nullable=False)
+    category_slug: Mapped[str | None] = mapped_column(String(100), nullable=True)
     version_date: Mapped[str | None] = mapped_column(String(60), nullable=True)
+    enactment_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    commencement_date: Mapped[date | None] = mapped_column(Date, nullable=True)
     source_note: Mapped[str | None] = mapped_column(String(250), nullable=True)
+    source_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    sha256_hash: Mapped[str | None] = mapped_column(String(64), nullable=True)
     tags: Mapped[str | None] = mapped_column(String(250), nullable=True)
     summary_text: Mapped[str | None] = mapped_column(Text, nullable=True)
     file_path: Mapped[str | None] = mapped_column(String(500), nullable=True)
@@ -394,6 +401,58 @@ class BareAct(Base):
         cascade="all, delete-orphan",
         order_by="BareActSection.id",
     )
+    versions: Mapped[list[BareActVersion]] = relationship(
+        back_populates="act",
+        cascade="all, delete-orphan",
+        order_by="BareActVersion.effective_from",
+    )
+    amendments: Mapped[list[LegislativeAmendment]] = relationship(
+        back_populates="act",
+        cascade="all, delete-orphan",
+        order_by="desc(LegislativeAmendment.gazette_date)",
+    )
+
+
+class BareActVersion(Base):
+    """Historical and current statutory versions for version control and date-specific queries."""
+
+    __tablename__ = "bare_act_versions"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    act_id: Mapped[int] = mapped_column(ForeignKey("bare_acts.id", ondelete="CASCADE"), nullable=False, index=True)
+    version_tag: Mapped[str] = mapped_column(String(80), nullable=False)
+    version_title: Mapped[str] = mapped_column(String(250), nullable=False)
+    effective_from: Mapped[date | None] = mapped_column(Date, nullable=True)
+    effective_to: Mapped[date | None] = mapped_column(Date, nullable=True)
+    is_current: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    file_path: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    sha256_hash: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=ist_now)
+
+    act: Mapped[BareAct] = relationship(back_populates="versions")
+
+
+class LegislativeAmendment(Base):
+    """Tracked legislative amendments, notifications, and amending acts with audit status."""
+
+    __tablename__ = "legislative_amendments"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    act_id: Mapped[int] = mapped_column(ForeignKey("bare_acts.id", ondelete="CASCADE"), nullable=False, index=True)
+    amending_act_title: Mapped[str] = mapped_column(String(250), nullable=False)
+    amending_act_no: Mapped[str | None] = mapped_column(String(80), nullable=True)
+    amending_year: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    notification_no: Mapped[str | None] = mapped_column(String(150), nullable=True)
+    gazette_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    commencement_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    sections_affected: Mapped[str | None] = mapped_column(String(300), nullable=True)
+    status: Mapped[str] = mapped_column(String(40), default="detected", nullable=False)
+    source_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=ist_now)
+
+    act: Mapped[BareAct] = relationship(back_populates="amendments")
 
 
 class BareActSection(Base):

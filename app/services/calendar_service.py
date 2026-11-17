@@ -147,6 +147,9 @@ def get_events_for_range(db: Session, start_date: date, end_date: date) -> list[
 
 
 def get_month_view(db: Session, year: int, month: int) -> dict:
+    from app.services.hearing_service import sync_all_active_matters_calendar
+    sync_all_active_matters_calendar(db)
+
     _, last_day = calendar.monthrange(year, month)
     start_date = date(year, month, 1)
     end_date = date(year, month, last_day)

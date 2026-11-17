@@ -28,12 +28,15 @@ from app.models import (
 )
 from app.schemas import (
     AIUsageSummaryOut,
+    ApplicableLawOut,
     BareActCreate,
     BareActDetailOut,
     BareActOut,
     BareActSectionOut,
+    BareActVersionOut,
     FourPartAnalysisOut,
     JudgmentOut,
+    LegislativeAmendmentOut,
     ResearchAskRequest,
     ResearchConfigUpdate,
     ThreePointAnalysisOut,
@@ -153,10 +156,16 @@ def _act_to_out(act: BareAct) -> BareActOut:
         id=act.id,
         title=act.title,
         short_title=act.short_title,
+        act_no=act.act_no,
         year=act.year,
         jurisdiction=act.jurisdiction,
+        category_slug=act.category_slug,
         version_date=act.version_date,
+        enactment_date=act.enactment_date,
+        commencement_date=act.commencement_date,
         source_note=act.source_note,
+        source_url=act.source_url,
+        sha256_hash=act.sha256_hash,
         tags=act.tags,
         summary_text=act.summary_text,
         is_demo=act.is_demo,
@@ -911,7 +920,15 @@ def render_bare_act_pdf_page(db: Session, act_id: int, page_number: int) -> byte
 
 
 def get_bare_act_detail(db: Session, act_id: int) -> BareActDetailOut:
-    act = db.scalar(select(BareAct).options(selectinload(BareAct.sections)).where(BareAct.id == act_id))
+    act = db.scalar(
+        select(BareAct)
+        .options(
+            selectinload(BareAct.sections),
+            selectinload(BareAct.versions),
+            selectinload(BareAct.amendments),
+        )
+        .where(BareAct.id == act_id)
+    )
     if act is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Bare Act not found.")
     base = _act_to_out(act)
@@ -927,6 +944,34 @@ def get_bare_act_detail(db: Session, act_id: int) -> BareActDetailOut:
                 body_text=s.body_text,
             )
             for s in act.sections
+        ],
+        versions=[
+            BareActVersionOut(
+                id=v.id,
+                act_id=v.act_id,
+                version_tag=v.version_tag,
+                version_title=v.version_title,
+                effective_from=v.effective_from,
+                effective_to=v.effective_to,
+                is_current=v.is_current,
+                sha256_hash=v.sha256_hash,
+                notes=v.notes,
+            )
+            for v in act.versions
+        ],
+        amendments=[
+            LegislativeAmendmentOut(
+                id=a.id,
+                act_id=a.act_id,
+                amending_act_title=a.amending_act_title,
+                amending_act_no=a.amending_act_no,
+                amending_year=a.amending_year,
+                commencement_date=a.commencement_date,
+                sections_affected=a.sections_affected,
+                status=a.status,
+                notes=a.notes,
+            )
+            for a in act.amendments
         ],
     )
 
@@ -1185,7 +1230,10 @@ def ask_legal_research(
     citations = [
         {
             "act_id": h["act_id"],
+            "section_id": h.get("section_id"),
             "act_title": h["act_title"],
+            "short_title": h.get("short_title"),
+            "year": h.get("year"),
             "section_no": h["section_no"],
             "heading": h["heading"],
             "page_number": h["page_number"],
@@ -1329,7 +1377,7 @@ def _generate_ai_statutory_analysis(
             f"Official Legislative Heading: {heading}.",
             "Source Integrity: Verbatim text extracted directly from local chamber Bare Act database.",
             "Procedural Verification: Physical page references link directly to original uploaded PDF document.",
-            "Live AI Status: Add your prepaid Gemini or OpenAI API key to activate dynamic cloud interpretation.",
+            "Scope & Applicability: Operation and jurisdiction strictly governed by the statutory text as enacted.",
         ]
         return interpretation, characteristics, "local_statutory_engine", 0, 0, 0.0, "unconfigured"
 
@@ -1602,22 +1650,39 @@ def get_three_point_analysis(
     act_id: int,
     section_id: int,
     *,
+    section_no: str | None = None,
     regenerate: bool = False,
     actor: str = "advocate",
 ) -> dict:
     """
-    Returns the mandatory Four-Part statutory reference for the selected provision:
+    Returns the two-part statutory reference for the selected provision:
     1. Statutory Provision & Original PDF Page Reference (Local DB)
-    2. Interpretation (AI / SQLite Cache)
-    3. Characteristics of the Provision (AI / SQLite Cache)
-    4. Absolutely Relevant Judgments (Indian Kanoon verified authorities)
+    2. Characteristics of the Provision (AI / SQLite Cache)
     """
-    sec = db.scalar(
-        select(BareActSection)
-        .join(BareAct)
-        .options(selectinload(BareActSection.act))
-        .where(BareActSection.id == section_id, BareActSection.act_id == act_id)
-    )
+    sec = None
+    if section_id > 0:
+        sec = db.scalar(
+            select(BareActSection)
+            .join(BareAct)
+            .options(selectinload(BareActSection.act))
+            .where(BareActSection.id == section_id, BareActSection.act_id == act_id)
+        )
+    if sec is None and section_no:
+        norm_no = section_no.lower().strip()
+        sec = db.scalar(
+            select(BareActSection)
+            .join(BareAct)
+            .options(selectinload(BareActSection.act))
+            .where(BareActSection.act_id == act_id, func.lower(BareActSection.section_no) == norm_no)
+        )
+        if sec is None:
+            # Fallback substring match on section_no
+            sec = db.scalar(
+                select(BareActSection)
+                .join(BareAct)
+                .options(selectinload(BareActSection.act))
+                .where(BareActSection.act_id == act_id, BareActSection.section_no.ilike(f"%{norm_no}%"))
+            )
     if sec is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Statutory provision not found.")
 
@@ -1636,22 +1701,6 @@ def get_three_point_analysis(
             chars = json.loads(cached.characteristics_json)
         except Exception:
             chars = []
-        try:
-            judgments = json.loads(getattr(cached, "judgments_json", "[]"))
-        except Exception:
-            judgments = []
-
-        kanoon_status = "verified" if judgments else "empty"
-
-        # If judgments weren't cached in older schema, fetch them now
-        if not judgments:
-            judgments, kanoon_status = _fetch_verified_kanoon_judgments(
-                act_title=act.title,
-                section_no=sec.section_no,
-                heading=sec.heading,
-            )
-            cached.judgments_json = json.dumps(judgments)
-            db.commit()
 
         return {
             "act_id": act.id,
@@ -1665,14 +1714,14 @@ def get_three_point_analysis(
             "page_count": act.page_count,
             "has_file": bool(act.file_path),
             "statutory_text": sec.body_text,
-            "interpretation": cached.interpretation,
+            "interpretation": "",
             "characteristics": chars,
-            "judgments": judgments,
+            "judgments": [],
             "is_cached": True,
             "cached_at": cached.created_at.isoformat() if cached.created_at else None,
             "model_used": cached.model_id,
             "ai_status": "cached",
-            "kanoon_status": kanoon_status,
+            "kanoon_status": "disabled",
             "cost_inr": 0.0,
             "prompt_tokens": cached.prompt_tokens,
             "completion_tokens": cached.completion_tokens,
@@ -1688,18 +1737,14 @@ def get_three_point_analysis(
         body_text=sec.body_text,
     )
 
-    # Fetch verified Indian Kanoon judgments
-    judgments, kanoon_status = _fetch_verified_kanoon_judgments(
-        act_title=act.title,
-        section_no=sec.section_no,
-        heading=sec.heading,
-    )
+    judgments = []
+    kanoon_status = "disabled"
 
     # Save to SQLite cache
     if cached:
         cached.interpretation = interp
         cached.characteristics_json = json.dumps(chars)
-        cached.judgments_json = json.dumps(judgments)
+        cached.judgments_json = json.dumps([])
         cached.model_id = model_id
         cached.doc_hash = doc_hash
         cached.prompt_tokens = p_tok
@@ -1713,7 +1758,7 @@ def get_three_point_analysis(
             doc_hash=doc_hash,
             interpretation=interp,
             characteristics_json=json.dumps(chars),
-            judgments_json=json.dumps(judgments),
+            judgments_json=json.dumps([]),
             prompt_tokens=p_tok,
             completion_tokens=c_tok,
             cost_inr=cost_inr,
@@ -1746,14 +1791,14 @@ def get_three_point_analysis(
         "page_count": act.page_count,
         "has_file": bool(act.file_path),
         "statutory_text": sec.body_text,
-        "interpretation": interp,
+        "interpretation": "",
         "characteristics": chars,
-        "judgments": judgments,
+        "judgments": [],
         "is_cached": False,
         "cached_at": ist_now().isoformat(),
         "model_used": model_id,
         "ai_status": ai_status,
-        "kanoon_status": kanoon_status,
+        "kanoon_status": "disabled",
         "cost_inr": cost_inr,
         "prompt_tokens": p_tok,
         "completion_tokens": c_tok,

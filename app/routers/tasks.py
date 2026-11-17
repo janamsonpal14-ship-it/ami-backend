@@ -97,3 +97,19 @@ def update_task(
     assert refreshed is not None
     return _task_to_out(refreshed)
 
+
+@router.delete("/{task_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_task(
+    task_id: int,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    task = db.scalar(select(Task).where(Task.id == task_id))
+    if task is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Task not found.")
+    record_audit(db, actor=user.login_id, entity_type="task", entity_id=task.id, action="delete", before={"title": task.title})
+    db.delete(task)
+    db.commit()
+    return None
+
+

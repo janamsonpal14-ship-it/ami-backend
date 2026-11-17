@@ -269,6 +269,8 @@ def create_matter(db: Session, payload: MatterCreate, actor: str) -> MatterSumma
         if db.get(Advocate, adv_id):
             db.add(MatterAdvocate(matter_id=matter.id, advocate_id=adv_id))
 
+    from app.services.hearing_service import sync_calendar_event_for_matter
+    sync_calendar_event_for_matter(db, matter, advocate_ids=payload.advocate_ids)
     record_audit(db, actor=actor, entity_type="matter", entity_id=matter.id, action="create", after={"title": matter.title, "case_number": matter.case_number})
     db.commit()
     return get_matter_summary(db, matter.id)
@@ -326,6 +328,9 @@ def update_matter(db: Session, matter_id: int, payload: MatterUpdate, actor: str
         for adv_id in set(advocate_ids):
             if db.get(Advocate, adv_id):
                 db.add(MatterAdvocate(matter_id=matter.id, advocate_id=adv_id))
+
+    from app.services.hearing_service import sync_calendar_event_for_matter
+    sync_calendar_event_for_matter(db, matter, advocate_ids=advocate_ids)
 
     record_audit(db, actor=actor, entity_type="matter", entity_id=matter.id, action="update", after={"title": matter.title, "stage": matter.current_stage})
     db.commit()

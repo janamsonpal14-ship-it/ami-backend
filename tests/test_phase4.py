@@ -297,33 +297,15 @@ def test_three_point_statutory_reference_and_caching(client_and_dirs):
     assert data1["page_number"] == 1
     assert data1["is_cached"] is False
 
-    # Point 2 assertions: Interpretation present and legally grounded
-    assert len(data1["interpretation"]) > 20
-    assert "Section 9" in data1["interpretation"] or "Arbitration" in data1["interpretation"]
-
-    # Point 3 assertions: Characteristics list present
+    # Point 2 assertions: Characteristics list present
     assert isinstance(data1["characteristics"], list)
     assert len(data1["characteristics"]) >= 3
 
-    # Point 4 assertions: Absolutely Relevant Judgments (Indian Kanoon verified authorities)
+    # Kanoon API removed from statutory search response
     assert isinstance(data1["judgments"], list)
-    assert len(data1["judgments"]) >= 2
-    courts = [j["court"] for j in data1["judgments"]]
-    assert any("Supreme Court" in c for c in courts), "Must prioritize Supreme Court of India"
-    assert any("Bombay" in c for c in courts), "Must prioritize Bombay High Court"
+    assert len(data1["judgments"]) == 0
 
-    # Verify substantive fields on every judgment (Zero-Hallucination guarantee)
-    for j in data1["judgments"]:
-        assert j["case_name"] and len(j["case_name"]) > 5
-        assert j["court"]
-        assert j["citation"]
-        assert j["legal_proposition"] and len(j["legal_proposition"]) > 15
-        assert j["relevant_paragraphs"]
-        assert j["source_url"].startswith("https://indiankanoon.org/doc/")
-        assert j["doc_id"] > 0
-        assert j["authority_type"] in ("binding", "persuasive", "distinguishing")
-
-    # 2. Fetch Four-Part Analysis (Second Call - MUST be SQLite cache hit at ₹0.00)
+    # 2. Fetch Analysis (Second Call - MUST be SQLite cache hit at ₹0.00)
     resp2 = client.get(
         f"/api/bare-acts/{act_id}/sections/{sec_id}/four-part",
         headers=admin_headers,
@@ -333,17 +315,16 @@ def test_three_point_statutory_reference_and_caching(client_and_dirs):
     assert data2["is_cached"] is True
     assert data2["ai_status"] == "cached"
     assert data2["cost_inr"] == 0.0
-    assert data2["interpretation"] == data1["interpretation"]
     assert data2["characteristics"] == data1["characteristics"]
-    assert data2["judgments"] == data1["judgments"]
+    assert data2["judgments"] == []
 
-    # Also verify backward-compatible /three-point route returns the same four-part output
+    # Also verify backward-compatible /three-point route returns the same output
     resp_compat = client.get(
         f"/api/bare-acts/{act_id}/sections/{sec_id}/three-point",
         headers=admin_headers,
     )
     assert resp_compat.status_code == 200
-    assert resp_compat.json()["judgments"] == data1["judgments"]
+    assert resp_compat.json()["characteristics"] == data1["characteristics"]
 
     # 3. Check Pay-As-You-Go AI Usage Ledger
     usage_resp = client.get("/api/law/ai-usage", headers=admin_headers)
@@ -377,5 +358,67 @@ def test_three_point_statutory_reference_and_caching(client_and_dirs):
     generic_data = generic_resp.json()
     # Must never invent fake judgments
     assert generic_data["judgments"] == []
-    assert generic_data["kanoon_status"] in ("empty", "unconfigured")
+    assert generic_data["kanoon_status"] in ("disabled", "empty", "unconfigured")
+
+
+def test_delete_draft_memo_workflow(client_and_dirs):
+    client, _, _ = client_and_dirs
+    headers = _login_headers(client)
+
+    # 1. Create a draft memo
+    create_res = client.post(
+        "/api/memos",
+        json={
+            "bill_date": "2026-11-14",
+            "addressee_name": "Test Client For Deletion",
+            "lines": [
+                {
+                    "description": "Initial Consultancy",
+                    "quantity": "1",
+                    "rate": "15000.00",
+                }
+            ],
+        },
+        headers=headers,
+    )
+    assert create_res.status_code == 200
+    memo_id = create_res.json()["id"]
+    assert create_res.json()["status"] == "Draft"
+
+    # 2. Delete the draft memo -> should succeed
+    del_res = client.delete(f"/api/memos/{memo_id}", headers=headers)
+    assert del_res.status_code == 200
+    assert del_res.json()["status"] == "ok"
+
+    # Confirm it no longer exists
+    get_res = client.get(f"/api/memos/{memo_id}", headers=headers)
+    assert get_res.status_code == 404
+
+    # 3. Create another memo and issue it
+    create_res2 = client.post(
+        "/api/memos",
+        json={
+            "bill_date": "2026-11-14",
+            "addressee_name": "Test Client Issued",
+            "lines": [
+                {
+                    "description": "Hearing Appearance",
+                    "quantity": "1",
+                    "rate": "25000.00",
+                }
+            ],
+        },
+        headers=headers,
+    )
+    memo_id2 = create_res2.json()["id"]
+    issue_res = client.post(f"/api/memos/{memo_id2}/issue", headers=headers)
+    assert issue_res.status_code == 200
+    assert issue_res.json()["status"] == "Issued"
+
+    # 4. Deleting an Issued memo is now supported upon advocate confirmation with audit logging
+    del_issued = client.delete(f"/api/memos/{memo_id2}", headers=headers)
+    assert del_issued.status_code == 200
+    assert "deleted successfully" in del_issued.json()["message"]
+    assert client.get(f"/api/memos/{memo_id2}", headers=headers).status_code == 404
+
 

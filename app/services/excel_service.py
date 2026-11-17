@@ -25,12 +25,27 @@ _MONTH_ABBR = {
 }
 
 
-def export_monthly_xlsx(db: Session, year: int, month: int, search: str | None = None) -> tuple[bytes, str]:
-    """Export Monthly Matters List preserving exact columns & order."""
-    rows = get_monthly_report(db, year, month, search)
+def export_monthly_xlsx(
+    db: Session,
+    year: int,
+    month: int,
+    search: str | None = None,
+    filter_mode: str = "month",
+) -> tuple[bytes, str]:
+    """Export Monthly / All Matters List preserving exact columns & order."""
+    rows = get_monthly_report(db, year, month, search, filter_mode=filter_mode)
     wb = Workbook()
     ws = wb.active
-    ws.title = f"{calendar.month_abbr[month]} {year}"
+
+    if filter_mode == "all":
+        ws.title = "All Matters Register"
+        filename = f"All_Matters_Register_{ist_today().isoformat()}.xlsx"
+    elif filter_mode == "no_date":
+        ws.title = "Date Awaited Matters"
+        filename = f"Date_Awaited_Matters_{ist_today().isoformat()}.xlsx"
+    else:
+        ws.title = f"{calendar.month_abbr[month]} {year}"
+        filename = f"Monthly_Matters_{calendar.month_abbr[month]}_{year}.xlsx"
 
     headers = ["Sr. No.", "Matter", "Court", "Present Date", "Next Date", "Business Conducted", "Stage"]
     ws.append(headers)
@@ -56,7 +71,7 @@ def export_monthly_xlsx(db: Session, year: int, month: int, search: str | None =
 
     buf = io.BytesIO()
     wb.save(buf)
-    return buf.getvalue(), f"Monthly_Matters_{calendar.month_abbr[month]}_{year}.xlsx"
+    return buf.getvalue(), filename
 
 
 def export_client_wise_xlsx(db: Session, search: str | None = None) -> tuple[bytes, str]:

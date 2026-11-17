@@ -1,27 +1,73 @@
-# Byte-compiled / optimized / DLL files
+# Python Bytecode and Compilation Caches
 __pycache__/
 *.py[cod]
 *$py.class
+*.so
 
-# Virtual Environment
+# Virtual Environments
 .venv/
 venv/
 ENV/
+env/
+env.bak/
+venv.bak/
 
-# Testing & Cache
+# Testing, Coverage & Type Check Caches
 .pytest_cache/
 .coverage
+.coverage.*
 htmlcov/
+.mypy_cache/
+.ruff_cache/
 
-# Local databases & cache
+# Databases, WAL and Locks
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+data/*.db
 data/*.db-shm
 data/*.db-wal
+data/*.sqlite
+data/*.sqlite3
+
+# Security & Secret Keys
+.jwt_secret
+data/.jwt_secret
+.env
+.env.*
+*.key
+*.pem
+
+# Runtime User Data, Storage, Backups & Uploads
+data/backups/
 data/cache/
+data/exports/
+data/logs/
 data/snapshots/
+data/uploads/
+data/legal_library/
 
-# eCourts API Test Results
+# Application Logs
+*.log
+logs/
+
+# API Test Scratch & External Scrapes
 ecourts_test_results/
-
-# Indian Kanoon API Test Results
 indian_kanoon_test_results/
 
+# OS Artifacts
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE & Editor Configurations
+.idea/
+.vscode/
+*.swp
+*.swo

@@ -148,6 +148,29 @@ def update_letterhead(db: Session, letterhead_id: int, payload: dict, actor: str
     return letterhead_to_dict(lh)
 
 
+def delete_letterhead(db: Session, letterhead_id: int, actor: str = "demo_advocate") -> dict:
+    lh = db.get(LetterheadTemplate, letterhead_id)
+    if lh is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Letterhead not found.")
+    was_default = lh.is_default
+    file_path = lh.file_path
+    db.delete(lh)
+    if was_default:
+        next_lh = db.scalars(select(LetterheadTemplate).order_by(LetterheadTemplate.id.desc())).first()
+        if next_lh:
+            next_lh.is_default = True
+    record_audit(db, actor=actor, entity_type="letterhead", entity_id=letterhead_id, action="delete")
+    db.commit()
+    if file_path:
+        try:
+            p = Path(file_path)
+            if p.exists():
+                p.unlink()
+        except Exception:
+            pass
+    return {"deleted": True, "id": letterhead_id}
+
+
 def format_ordinal_date(val: date | datetime | str | None) -> str:
     """Format a date as '04th November 2026' matching standard legal bills."""
     if val is None:

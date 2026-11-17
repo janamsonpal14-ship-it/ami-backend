@@ -1,0 +1,239 @@
+{
+  "manifest_version": "1.0.0",
+  "name": "AMI Initial Five-Act Pilot Manifest",
+  "generated_at": "2026-11-17T16:10:00+05:30",
+  "acts": [
+    {
+      "pilot_id": 1,
+      "slug": "code_of_civil_procedure_1908",
+      "title": "The Code of Civil Procedure, 1908",
+      "short_title": "CPC, 1908",
+      "act_no": "Act No. 5 of 1908",
+      "year": 1908,
+      "jurisdiction": "Central",
+      "category_slug": "civil_procedure_and_civil_laws",
+      "category_name": "Civil Procedure and Civil Laws",
+      "enactment_date": "1908-03-21",
+      "commencement_date": "1909-01-01",
+      "source_provider": "India Code",
+      "source_handle": "123456789/1362",
+      "source_url": "https://indiacode.gov.in/handle/123456789/1362",
+      "bitstream_url": null,
+      "local_existing_path": "data/uploads/bare_acts/20261112_193056_A190805.pdf",
+      "target_rel_dir": "data/legal_library/civil_procedure_and_civil_laws/code_of_civil_procedure_1908",
+      "target_filename": "Code_of_Civil_Procedure_1908.pdf",
+      "historical_versions": [
+        {
+          "version_tag": "pre_2002_amendment",
+          "title": "CPC (Prior to 1999 & 2002 Amendments)",
+          "effective_from": "1909-01-01",
+          "effective_to": "2002-06-30",
+          "notes": "Historical benchmark prior to Act 46 of 1999 and Act 22 of 2002 enforcing strict procedural timelines."
+        }
+      ],
+      "known_amendments": [
+        {
+          "amending_act_title": "Code of Civil Procedure (Amendment) Act, 1999",
+          "amending_act_no": "Act No. 46 of 1999",
+          "amending_year": 1999,
+          "commencement_date": "2002-07-01",
+          "sections_affected": "Section 26, 27, 89, Order VI Rule 17, Order VIII Rule 1",
+          "status": "incorporated"
+        },
+        {
+          "amending_act_title": "Code of Civil Procedure (Amendment) Act, 2002",
+          "amending_act_no": "Act No. 22 of 2002",
+          "amending_year": 2002,
+          "commencement_date": "2002-07-01",
+          "sections_affected": "Section 100A, Order IX, Order XVIII",
+          "status": "incorporated"
+        },
+        {
+          "amending_act_title": "Commercial Courts Act, 2015 (CPC Amendments for Commercial Disputes)",
+          "amending_act_no": "Act No. 4 of 2016",
+          "amending_year": 2016,
+          "commencement_date": "2015-10-23",
+          "sections_affected": "Section 35, Section 35A, Order XI (Disclosure & Inspection)",
+          "status": "incorporated"
+        }
+      ]
+    },
+    {
+      "pilot_id": 2,
+      "slug": "arbitration_and_conciliation_act_1996",
+      "title": "The Arbitration and Conciliation Act, 1996",
+      "short_title": "Arbitration Act, 1996",
+      "act_no": "Act No. 26 of 1996",
+      "year": 1996,
+      "jurisdiction": "Central",
+      "category_slug": "arbitration_and_conciliation",
+      "category_name": "Arbitration and Conciliation",
+      "enactment_date": "1996-08-16",
+      "commencement_date": "1996-08-22",
+      "source_provider": "India Code",
+      "source_handle": "123456789/496493",
+      "source_url": "https://indiacode.gov.in/handle/123456789/496493",
+      "source_uuid": "51601006-0e76-4a81-83ce-739f3a021112",
+      "bitstream_url": "https://indiacode.gov.in/server/api/core/bitstreams/c368a901-3738-47f6-acb8-9885147945ec/content",
+      "local_existing_path": null,
+      "target_rel_dir": "data/legal_library/arbitration_and_conciliation/arbitration_and_conciliation_act_1996",
+      "target_filename": "Arbitration_and_Conciliation_Act_1996.pdf",
+      "historical_versions": [
+        {
+          "version_tag": "pre_2015_amendment",
+          "title": "Arbitration and Conciliation Act, 1996 (Pre-2015 Amendment)",
+          "effective_from": "1996-08-22",
+          "effective_to": "2015-10-22",
+          "notes": "Historical version prior to the 2015 Amendment Act introducing Section 29A statutory time limits and Section 34 public policy grounds revision."
+        },
+        {
+          "version_tag": "2015_amendment",
+          "title": "Arbitration and Conciliation Act, 1996 (Post-2015 / Pre-2019)",
+          "effective_from": "2015-10-23",
+          "effective_to": "2019-08-08",
+          "notes": "Version incorporating Act No. 3 of 2016."
+        },
+        {
+          "version_tag": "current",
+          "title": "Arbitration and Conciliation Act, 1996 (As Amended up to date)",
+          "effective_from": "2019-08-09",
+          "effective_to": null,
+          "is_current": true,
+          "notes": "Current applicable statutory text incorporating 2019 and 2021 amendments."
+        }
+      ],
+      "known_amendments": [
+        {
+          "amending_act_title": "Arbitration and Conciliation (Amendment) Act, 2015",
+          "amending_act_no": "Act No. 3 of 2016",
+          "amending_year": 2015,
+          "commencement_date": "2015-10-23",
+          "sections_affected": "Section 9, Section 11, Section 12, Section 29A, Section 34, Section 36",
+          "status": "incorporated"
+        },
+        {
+          "amending_act_title": "Arbitration and Conciliation (Amendment) Act, 2019",
+          "amending_act_no": "Act No. 33 of 2019",
+          "amending_year": 2019,
+          "commencement_date": "2019-08-09",
+          "sections_affected": "Section 11, Section 23, Section 29A, Section 42A, Section 42B",
+          "status": "incorporated"
+        },
+        {
+          "amending_act_title": "Arbitration and Conciliation (Amendment) Act, 2021",
+          "amending_act_no": "Act No. 3 of 2021",
+          "amending_year": 2021,
+          "commencement_date": "2020-11-04",
+          "sections_affected": "Section 36(3) proviso (unconditional stay where award induced by fraud/corruption)",
+          "status": "incorporated"
+        }
+      ]
+    },
+    {
+      "pilot_id": 3,
+      "slug": "maharashtra_rent_control_act_1999",
+      "title": "The Maharashtra Rent Control Act, 1999",
+      "short_title": "Maharashtra Rent Control Act, 1999",
+      "act_no": "Maharashtra Act No. 18 of 2000",
+      "year": 1999,
+      "jurisdiction": "Maharashtra",
+      "category_slug": "property_tenancy_and_real_estate",
+      "category_name": "Property, Tenancy and Real Estate",
+      "enactment_date": "2000-03-10",
+      "commencement_date": "2000-03-31",
+      "source_provider": "Maharashtra Law & Judiciary / India Code State",
+      "source_handle": "123456789/568603",
+      "source_url": "https://indiacode.gov.in/handle/123456789/568603",
+      "source_uuid": "39eb4492-79f1-4407-bc30-ca52d9abb1e2",
+      "bitstream_url": "https://indiacode.gov.in/server/api/core/bitstreams/1c31890e-5983-4993-98d6-316df10517f3/content",
+      "local_existing_path": null,
+      "target_rel_dir": "data/legal_library/property_tenancy_and_real_estate/maharashtra_rent_control_act_1999",
+      "target_filename": "Maharashtra_Rent_Control_Act_1999.pdf",
+      "historical_versions": [
+        {
+          "version_tag": "current",
+          "title": "Maharashtra Rent Control Act, 1999 (Current Enacted Text)",
+          "effective_from": "2000-03-31",
+          "effective_to": null,
+          "is_current": true,
+          "notes": "Unified Rent Act governing tenancy across Mumbai and the State of Maharashtra repealing Bombay Rent Act, 1947."
+        }
+      ],
+      "known_amendments": []
+    },
+    {
+      "pilot_id": 4,
+      "slug": "maharashtra_stamp_act_1958",
+      "title": "The Maharashtra Stamp Act",
+      "short_title": "Maharashtra Stamp Act, 1958",
+      "act_no": "Bombay Act No. 60 of 1958",
+      "year": 1958,
+      "jurisdiction": "Maharashtra",
+      "category_slug": "property_tenancy_and_real_estate",
+      "category_name": "Property, Tenancy and Real Estate",
+      "enactment_date": "1958-06-04",
+      "commencement_date": "1959-02-16",
+      "source_provider": "Maharashtra Law & Judiciary / India Code State",
+      "source_handle": "123456789/d30633b4",
+      "source_url": "https://indiacode.gov.in/handle/123456789/d30633b4",
+      "source_uuid": "d30633b4-acd0-47be-a13e-5e301b24e622",
+      "bitstream_url": "https://indiacode.gov.in/server/api/core/bitstreams/0c67dc7a-5ca3-4007-af18-18c3809e92bc/content",
+      "local_existing_path": null,
+      "target_rel_dir": "data/legal_library/property_tenancy_and_real_estate/maharashtra_stamp_act_1958",
+      "target_filename": "Maharashtra_Stamp_Act_1958.pdf",
+      "historical_versions": [
+        {
+          "version_tag": "current",
+          "title": "Maharashtra Stamp Act, 1958 (As Updated)",
+          "effective_from": "1959-02-16",
+          "effective_to": null,
+          "is_current": true,
+          "notes": "Governs stamp duties, adjudications, and impounding of instruments in Maharashtra."
+        }
+      ],
+      "known_amendments": []
+    },
+    {
+      "pilot_id": 5,
+      "slug": "bombay_city_civil_court_act_1948",
+      "title": "The Bombay City Civil Court Act, 1948",
+      "short_title": "Bombay City Civil Court Act, 1948",
+      "act_no": "Bombay Act No. 40 of 1948",
+      "year": 1948,
+      "jurisdiction": "Maharashtra",
+      "category_slug": "court_rules_and_practice_directions",
+      "category_name": "Court Rules and Practice Directions",
+      "enactment_date": "1948-05-10",
+      "commencement_date": "1948-08-16",
+      "source_provider": "Maharashtra Law & Judiciary / India Code State",
+      "source_handle": "123456789/ec6fd7dd",
+      "source_url": "https://indiacode.gov.in/handle/123456789/ec6fd7dd",
+      "source_uuid": "ec6fd7dd-8553-40ad-890c-b088e49c47ab",
+      "bitstream_url": "https://indiacode.gov.in/server/api/core/bitstreams/608de0db-1ee4-4efc-a3a6-4c0ae7707223/content",
+      "local_existing_path": null,
+      "target_rel_dir": "data/legal_library/court_rules_and_practice_directions/bombay_city_civil_court_act_1948",
+      "target_filename": "Bombay_City_Civil_Court_Act_1948.pdf",
+      "historical_versions": [
+        {
+          "version_tag": "current",
+          "title": "Bombay City Civil Court Act, 1948",
+          "effective_from": "1948-08-16",
+          "effective_to": null,
+          "is_current": true,
+          "notes": "Establishes and governs the City Civil Court for Greater Bombay and pecuniary jurisdictions."
+        }
+      ],
+      "known_amendments": [
+        {
+          "amending_act_title": "Bombay City Civil Court (Amendment) Act, 2012",
+          "amending_act_no": "Maharashtra Act No. 27 of 2012",
+          "amending_year": 2012,
+          "commencement_date": "2012-09-01",
+          "sections_affected": "Section 3 (Pecuniary jurisdiction enhancement to ₹1 Crore)",
+          "status": "incorporated"
+        }
+      ]
+    }
+  ]
+}
+

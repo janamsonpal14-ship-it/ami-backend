@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import date, datetime
 from decimal import Decimal
-from typing import Literal
+from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
@@ -521,10 +521,16 @@ class BareActOut(BaseModel):
     id: int
     title: str
     short_title: str | None = None
+    act_no: str | None = None
     year: int | None = None
     jurisdiction: str
+    category_slug: str | None = None
     version_date: str | None = None
+    enactment_date: date | None = None
+    commencement_date: date | None = None
     source_note: str | None = None
+    source_url: str | None = None
+    sha256_hash: str | None = None
     tags: str | None = None
     summary_text: str | None = None
     is_demo: bool
@@ -533,8 +539,66 @@ class BareActOut(BaseModel):
     section_count: int = 0
 
 
+class BareActVersionOut(BaseModel):
+    id: int
+    act_id: int
+    version_tag: str
+    version_title: str
+    effective_from: date | None = None
+    effective_to: date | None = None
+    is_current: bool
+    sha256_hash: str | None = None
+    notes: str | None = None
+
+
+class LegislativeAmendmentOut(BaseModel):
+    id: int
+    act_id: int
+    amending_act_title: str
+    amending_act_no: str | None = None
+    amending_year: int | None = None
+    commencement_date: date | None = None
+    sections_affected: str | None = None
+    status: str
+    notes: str | None = None
+
+
+class ApplicableVersionInfo(BaseModel):
+    version_tag: str
+    version_title: str
+    notes: str | None = None
+
+
+class ApplicableAmendmentInfo(BaseModel):
+    title: str
+    act_no: str | None = None
+    commencement_date: str | None = None
+    sections_affected: str | None = None
+
+
+class MatchingSectionInfo(BaseModel):
+    section_no: str
+    heading: str
+    page_number: int
+    body_text: str
+
+
+class ApplicableLawOut(BaseModel):
+    act_id: int
+    act_title: str
+    as_of_date: str
+    applicable_version: ApplicableVersionInfo
+    amendments_in_effect_count: int
+    amendments_in_effect: list[ApplicableAmendmentInfo] = Field(default_factory=list)
+    subsequent_amendments_count: int
+    subsequent_amendments: list[ApplicableAmendmentInfo] = Field(default_factory=list)
+    matching_section: MatchingSectionInfo | None = None
+
+
 class BareActDetailOut(BareActOut):
     sections: list[BareActSectionOut] = Field(default_factory=list)
+    versions: list[BareActVersionOut] = Field(default_factory=list)
+    amendments: list[LegislativeAmendmentOut] = Field(default_factory=list)
 
 
 class ResearchConfigUpdate(BaseModel):
@@ -580,22 +644,23 @@ class FourPartAnalysisOut(BaseModel):
     page_count: int = 0
     has_file: bool = False
     statutory_text: str
-    interpretation: str
+    interpretation: str = ""
     characteristics: list[str] = Field(default_factory=list)
     judgments: list[JudgmentOut] = Field(default_factory=list)
     is_cached: bool = False
     cached_at: str | None = None
     model_used: str = ""
     ai_status: str = "ready"  # ready | cached | generated | unconfigured | error | fallback
-    kanoon_status: str = "verified"  # verified | unconfigured | empty | error
+    kanoon_status: str = "disabled"  # disabled | verified | unconfigured | empty | error
     cost_inr: float = 0.0
     prompt_tokens: int = 0
     completion_tokens: int = 0
     error_message: str | None = None
 
 
-# Backward-compatibility alias
+# Backward-compatibility aliases
 ThreePointAnalysisOut = FourPartAnalysisOut
+TwoPartAnalysisOut = FourPartAnalysisOut
 
 
 class AIUsageSummaryOut(BaseModel):

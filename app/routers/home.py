@@ -58,13 +58,19 @@ def monthly_report(
     year: int | None = None,
     month: int | None = None,
     search: str | None = None,
+    filter_mode: str = Query(default="month"),
     _user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     today = ist_today()
     y = year or today.year
     m = month or today.month
-    return {"year": y, "month": m, "rows": get_monthly_report(db, y, m, search)}
+    return {
+        "year": y,
+        "month": m,
+        "filter_mode": filter_mode,
+        "rows": get_monthly_report(db, y, m, search, filter_mode=filter_mode),
+    }
 
 
 @router.get("/reports/monthly/export.xlsx")
@@ -72,13 +78,14 @@ def monthly_report_xlsx(
     year: int | None = None,
     month: int | None = None,
     search: str | None = None,
+    filter_mode: str = Query(default="month"),
     _user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     today = ist_today()
     y = year or today.year
     m = month or today.month
-    content, filename = export_monthly_xlsx(db, y, m, search)
+    content, filename = export_monthly_xlsx(db, y, m, search, filter_mode=filter_mode)
     return Response(
         content=content,
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",

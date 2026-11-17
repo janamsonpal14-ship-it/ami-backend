@@ -4,14 +4,19 @@ from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, Respon
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 
+from datetime import date
+
 from app.database import get_db
 from app.models import User
 from app.schemas import (
     AIUsageSummaryOut,
+    ApplicableLawOut,
     BareActCreate,
     BareActDetailOut,
     BareActOut,
+    BareActVersionOut,
     FourPartAnalysisOut,
+    LegislativeAmendmentOut,
     ResearchAskRequest,
     ResearchConfigUpdate,
     ThreePointAnalysisOut,
@@ -33,6 +38,14 @@ from app.services.law_service import (
     search_bare_acts_and_sections,
     update_research_config,
     upload_bare_act_file,
+)
+from app.services.legislative_monitor import (
+    check_official_legislative_updates,
+    get_monitoring_status,
+)
+from app.services.statutory_downloader import (
+    execute_pilot_ingestion,
+    query_law_applicable_on_date,
 )
 
 router = APIRouter(prefix="/api", tags=["law"])
@@ -117,6 +130,72 @@ def read_bare_act_detail(
     db: Session = Depends(get_db),
 ):
     return get_bare_act_detail(db, act_id)
+
+
+@router.get("/bare-acts/{act_id}/applicable-law", response_model=ApplicableLawOut)
+def read_law_applicable_on_date(
+    act_id: int,
+    as_of_date: date = Query(..., description="Query date in YYYY-MM-DD format"),
+    section_no: str | None = Query(None, description="Optional section number e.g. '29A' or 'Section 34'"),
+    _user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Retrieve the statutory version and amendments applicable on an exact historical or current date."""
+    try:
+        return query_law_applicable_on_date(db, act_id, as_of_date, section_no=section_no)
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
+
+
+@router.get("/bare-acts/{act_id}/versions", response_model=list[BareActVersionOut])
+def read_bare_act_versions(
+    act_id: int,
+    _user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Retrieve historical and current statutory versions for an Act."""
+    detail = get_bare_act_detail(db, act_id)
+    return detail.versions
+
+
+@router.get("/bare-acts/{act_id}/amendments", response_model=list[LegislativeAmendmentOut])
+def read_bare_act_amendments(
+    act_id: int,
+    _user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Retrieve tracked legislative amendments and notifications for an Act."""
+    detail = get_bare_act_detail(db, act_id)
+    return detail.amendments
+
+
+@router.get("/law/monitoring/status")
+def read_legislative_monitoring_status(
+    _user: User = Depends(get_current_user),
+):
+    """Retrieve the execution status and findings of the daily legislative monitoring daemon."""
+    return get_monitoring_status()
+
+
+@router.post("/law/monitoring/run-now")
+def trigger_legislative_monitoring_now(
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Manually trigger an immediate check of official repositories for statutory amendments and new laws."""
+    require_admin(user)
+    return check_official_legislative_updates(db)
+
+
+@router.post("/bare-acts/pilot-ingest", response_model=list[BareActOut])
+def trigger_pilot_ingestion(
+    user: User = Depends(get_current_user),
+):
+    """Admin endpoint to trigger automated download, verification, and ingestion of the 5 Pilot Acts."""
+    require_admin(user)
+    ingested = execute_pilot_ingestion()
+    from app.services.law_service import _act_to_out
+    return [_act_to_out(a) for a in ingested]
 
 
 @router.get("/bare-acts/{act_id}/file")
@@ -206,18 +285,17 @@ def get_research_history(
 def read_section_four_part_analysis(
     act_id: int,
     section_id: int,
+    section_no: str | None = Query(None),
     regenerate: bool = Query(False),
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     """
-    Returns the mandatory Four-Part statutory reference:
+    Returns the two-part statutory reference:
     1. Statutory Provision & Original PDF Page Reference
-    2. Interpretation
-    3. Characteristics of the Provision
-    4. Absolutely Relevant Judgments (Indian Kanoon verified authorities)
+    2. Characteristics of the Provision
     """
-    return get_three_point_analysis(db, act_id, section_id, regenerate=regenerate, actor=user.login_id)
+    return get_three_point_analysis(db, act_id, section_id, section_no=section_no, regenerate=regenerate, actor=user.login_id)
 
 
 @router.get("/law/ai-usage", response_model=AIUsageSummaryOut)

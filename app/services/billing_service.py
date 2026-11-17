@@ -336,6 +336,27 @@ def void_memo(db: Session, memo_id: int, reason: str, actor: str) -> FeeMemoOut:
     return get_memo(db, memo.id)
 
 
+def delete_memo(db: Session, memo_id: int, actor: str) -> dict:
+    memo = db.get(FeeMemo, memo_id)
+    if memo is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Fee Memo not found.")
+
+    bill_no = memo.bill_number
+    status_val = memo.status
+    record_audit(
+        db,
+        actor=actor,
+        entity_type="fee_memo",
+        entity_id=memo.id,
+        action="delete_memo",
+        before={"bill_number": bill_no, "status": status_val, "addressee": memo.addressee_name, "net_total": str(memo.net_total)},
+        after=None,
+    )
+    db.delete(memo)
+    db.commit()
+    return {"status": "ok", "message": f"Memo {bill_no} ({status_val}) deleted successfully."}
+
+
 def record_payment(db: Session, memo_id: int, payload: PaymentCreate, actor: str) -> FeeMemoOut:
     memo = db.scalar(
         select(FeeMemo).options(selectinload(FeeMemo.payments)).where(FeeMemo.id == memo_id)
@@ -502,3 +523,66 @@ def set_memo_quick_status(db: Session, memo_id: int, payload: MemoQuickStatusReq
     db.commit()
     db.expire(memo)
     return get_memo(db, memo.id)
+
+
+DEFAULT_FEE_SCHEDULE = [
+    {
+        "category": "Productive Appearance",
+        "label": "Productive Appearance",
+        "rate": 10000.0,
+        "description": "Productive Appearance (per appearance)",
+        "is_appearance": True,
+    },
+    {
+        "category": "Non-Productive Appearance",
+        "label": "Non-Productive Appearance",
+        "rate": 5000.0,
+        "description": "Non-Productive Appearance (per appearance)",
+        "is_appearance": True,
+    },
+    {
+        "category": "Drafting",
+        "label": "Drafting / Pleadings",
+        "rate": 20000.0,
+        "description": "Drafting (per draft)",
+        "is_appearance": False,
+    },
+    {
+        "category": "Consultancy",
+        "label": "Conference & Consultancy",
+        "rate": 10000.0,
+        "description": "Conference, Research and Due Diligence, Consultancy",
+        "is_appearance": False,
+    },
+    {
+        "category": "Miscellaneous Expenses",
+        "label": "Miscellaneous Expenses",
+        "rate": 0.0,
+        "description": "Miscellaneous exp (Stationery, clerk filing, photocopy, etc.) on actuals",
+        "is_appearance": False,
+    },
+]
+
+
+def get_fee_schedule(db: Session) -> list[dict]:
+    import json
+    settings = db.scalar(select(OfficeSettings))
+    if settings and settings.fee_schedule_json:
+        try:
+            return json.loads(settings.fee_schedule_json)
+        except Exception:
+            pass
+    return DEFAULT_FEE_SCHEDULE
+
+
+def update_fee_schedule(db: Session, items: list[dict], *, actor: str) -> list[dict]:
+    import json
+    settings = db.scalar(select(OfficeSettings))
+    if settings is None:
+        settings = OfficeSettings()
+        db.add(settings)
+    settings.fee_schedule_json = json.dumps(items)
+    record_audit(db, actor=actor, entity_type="fee_schedule", entity_id="settings", action="update", after={"count": len(items)})
+    db.commit()
+    return items
+

@@ -259,6 +259,11 @@ def test_letterhead_upload_and_memo_docx_pdf_export(client_and_dirs):
     reader = PdfReader(io.BytesIO(pdf_resp.content))
     assert len(reader.pages) == 2
 
+    del_resp = client.delete(f"/api/letterheads/{lh_id}", headers=headers)
+    assert del_resp.status_code == 200
+    assert del_resp.json()["deleted"] is True
+    assert client.get(f"/api/letterheads/{lh_id}/image", headers=headers).status_code == 404
+
 
 def test_excel_preview_import_and_bidirectional_exports(client_and_dirs):
     client, _ = client_and_dirs

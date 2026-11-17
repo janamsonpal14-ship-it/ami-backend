@@ -245,6 +245,13 @@ def test_atomic_hearing_update_calendar_no_duplicates_and_not_reached(client_and
     ev_dec = client.get("/api/calendar/events?start_date=2026-12-04&end_date=2026-12-31", headers=headers).json()
     assert not any(e["matter_id"] == mid for e in ev_dec)
 
+    # Test deleting hearing record
+    del_res = client.delete(f"/api/hearings/{h1_data['id']}", headers=headers)
+    assert del_res.status_code == 200
+    assert del_res.json()["success"] is True
+    h_list = client.get(f"/api/matters/{mid}/hearings", headers=headers).json()
+    assert not any(h["id"] == h1_data["id"] for h in h_list)
+
 
 def test_fee_memo_indian_words_adjustments_and_partial_payments(client_and_db):
     client, _ = client_and_db

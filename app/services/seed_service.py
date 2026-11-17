@@ -487,32 +487,6 @@ def ensure_seed_data(db: Session) -> None:
     db.flush()
     db.add(FeeMemoMatter(memo_id=memo2.id, matter_id=m3.id))
 
-    # Bare Act placeholders
-    db.add_all([
-        BareAct(
-            title="Code of Civil Procedure, 1908",
-            short_title="CPC",
-            year=1908,
-            jurisdiction="India",
-            version_date="Placeholder Entry",
-            source_note="Local placeholder only — upload verified legislation PDF/text before relying.",
-            tags="civil, jurisdiction, commercial",
-            summary_text="Sample placeholder entry for local Bare Acts library.",
-            is_demo=True,
-        ),
-        BareAct(
-            title="Arbitration and Conciliation Act, 1996",
-            short_title="Arbitration Act",
-            year=1996,
-            jurisdiction="India",
-            version_date="Placeholder Entry",
-            source_note="Local placeholder only — upload verified legislation PDF/text before relying.",
-            tags="arbitration, section 9, section 11, section 34",
-            summary_text="Sample placeholder entry for local Bare Acts library.",
-            is_demo=True,
-        ),
-    ])
-
     db.commit()
 
 
