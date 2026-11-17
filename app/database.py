@@ -34,8 +34,11 @@ def create_sqlite_engine(db_path: Path | str | None = None):
         cursor = dbapi_connection.cursor()
         cursor.execute("PRAGMA foreign_keys = ON;")
         if str(target_path) != ":memory:":
-            cursor.execute("PRAGMA journal_mode = WAL;")
-            cursor.execute("PRAGMA synchronous = NORMAL;")
+            try:
+                cursor.execute("PRAGMA journal_mode = WAL;")
+                cursor.execute("PRAGMA synchronous = NORMAL;")
+            except Exception:
+                pass
         cursor.close()
 
     return engine

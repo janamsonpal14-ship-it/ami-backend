@@ -6,12 +6,14 @@ from pathlib import Path
 from zoneinfo import ZoneInfo
 
 BASE_DIR = Path(__file__).resolve().parent.parent
+IS_VERCEL = bool(os.environ.get("VERCEL") or os.environ.get("AWS_LAMBDA_FUNCTION_NAME"))
+DEFAULT_DATA_DIR = Path("/tmp/data") if IS_VERCEL else (BASE_DIR / "data")
 DATA_DIR = Path(
     os.environ.get("AMI_DATA_DIR")
     or os.environ.get("AMICO_DATA_DIR")
     or os.environ.get("VELORA_DATA_DIR")
     or os.environ.get("ADVOCATEOS_DATA_DIR")
-    or (BASE_DIR / "data")
+    or DEFAULT_DATA_DIR
 )
 UPLOADS_DIR = DATA_DIR / "uploads"
 LETTERHEADS_DIR = UPLOADS_DIR / "letterheads"
@@ -40,6 +42,18 @@ def _resolve_db_path() -> Path:
     if explicit:
         return Path(explicit)
     amico_db = DATA_DIR / "amico.db"
+
+    # On Vercel serverless functions, copy bundled base database into /tmp/data/amico.db
+    if IS_VERCEL and not amico_db.exists():
+        bundled_db = BASE_DIR / "data" / "amico.db"
+        if bundled_db.exists():
+            import shutil
+            try:
+                DATA_DIR.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(bundled_db, amico_db)
+            except Exception:
+                pass
+
     velora_db = DATA_DIR / "velora.db"
     legacy_db = DATA_DIR / "advocateos.db"
     if not amico_db.exists():
@@ -79,7 +93,10 @@ def ensure_directories() -> None:
         CACHE_DIR,
         ECOURTS_CACHE_DIR,
     ):
-        folder.mkdir(parents=True, exist_ok=True)
+        try:
+            folder.mkdir(parents=True, exist_ok=True)
+        except OSError:
+            pass
 
 
 def get_jwt_secret() -> str:
@@ -92,6 +109,8 @@ def get_jwt_secret() -> str:
     )
     if env_secret:
         return env_secret
+    if IS_VERCEL:
+        return "ami-production-vercel-jwt-fallback-key-2026-safe"
     ensure_directories()
     if JWT_SECRET_PATH.exists():
         secret = JWT_SECRET_PATH.read_text(encoding="utf-8").strip()
