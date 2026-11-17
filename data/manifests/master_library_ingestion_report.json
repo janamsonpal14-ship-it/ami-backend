@@ -1,0 +1,1027 @@
+{
+  "total": 117,
+  "already_ingested": 15,
+  "successfully_ingested": 95,
+  "failed_or_skipped": 7,
+  "dry_run_found": 0,
+  "dry_run_not_found": 0,
+  "details": [
+    {
+      "act_id": 1,
+      "title": "The Code of Civil Procedure, 1908",
+      "cohort": 1,
+      "status": "already_indexed",
+      "section_count": 975,
+      "page_count": 347
+    },
+    {
+      "act_id": 2,
+      "title": "The Indian Contract Act, 1872",
+      "cohort": 1,
+      "status": "already_indexed",
+      "section_count": 155,
+      "page_count": 53
+    },
+    {
+      "act_id": 3,
+      "title": "The Specific Relief Act, 1963",
+      "cohort": 1,
+      "status": "already_indexed",
+      "section_count": 45,
+      "page_count": 20
+    },
+    {
+      "act_id": 4,
+      "title": "The Limitation Act, 1963",
+      "cohort": 1,
+      "status": "already_indexed",
+      "section_count": 36,
+      "page_count": 27
+    },
+    {
+      "act_id": 5,
+      "title": "The Commercial Courts Act, 2015",
+      "cohort": 1,
+      "status": "already_indexed",
+      "section_count": 65,
+      "page_count": 27
+    },
+    {
+      "act_id": 6,
+      "title": "The Sale of Goods Act, 1930",
+      "cohort": 1,
+      "status": "already_indexed",
+      "section_count": 66,
+      "page_count": 16
+    },
+    {
+      "act_id": 7,
+      "title": "The Indian Partnership Act, 1932",
+      "cohort": 1,
+      "status": "already_indexed",
+      "section_count": 7,
+      "page_count": 44
+    },
+    {
+      "act_id": 8,
+      "title": "The Indian Trusts Act, 1882",
+      "cohort": 1,
+      "status": "already_indexed",
+      "section_count": 99,
+      "page_count": 24
+    },
+    {
+      "act_id": 9,
+      "title": "The Suits Valuation Act, 1887",
+      "cohort": 1,
+      "status": "already_indexed",
+      "section_count": 12,
+      "page_count": 4
+    },
+    {
+      "act_id": 10,
+      "title": "The Interest Act, 1978",
+      "cohort": 1,
+      "status": "already_indexed",
+      "section_count": 9,
+      "page_count": 6
+    },
+    {
+      "act_id": 11,
+      "title": "The General Clauses Act, 1897",
+      "cohort": 1,
+      "status": "already_indexed",
+      "section_count": 1,
+      "page_count": 3
+    },
+    {
+      "act_id": 12,
+      "title": "The Arbitration and Conciliation Act, 1996",
+      "cohort": 2,
+      "status": "already_indexed",
+      "section_count": 110,
+      "page_count": 53
+    },
+    {
+      "act_id": 13,
+      "title": "The Mediation Act, 2023",
+      "cohort": 2,
+      "status": "ingested",
+      "sections": 67,
+      "pages": 33,
+      "sha256": "693bbd868feb1e7c2bd7248eec267807c8963c90810873cfad69ff9b8b899add"
+    },
+    {
+      "act_id": 14,
+      "title": "The India International Arbitration Centre Act, 2019",
+      "cohort": 2,
+      "status": "ingested",
+      "sections": 10,
+      "pages": 16,
+      "sha256": "87670d59f5378285c1d73ff0eab22bbc7b616297f7462857631aa19e00e11435"
+    },
+    {
+      "act_id": 15,
+      "title": "The Legal Services Authorities Act, 1987",
+      "cohort": 2,
+      "status": "ingested",
+      "sections": 41,
+      "pages": 19,
+      "sha256": "fb28f68a782d3e9dd398fcbb4564d82dceed6fd62ebd0e05dcaf749d5e899c59"
+    },
+    {
+      "act_id": 16,
+      "title": "Commercial Courts (Pre-Institution Mediation and Settlement) Rules, 2018",
+      "cohort": 2,
+      "status": "ingested",
+      "sections": 1,
+      "pages": 15,
+      "sha256": "5b8051bb4ccc48511535b2874fd5b8025bfcb968d4a283a5ee343dc358793786"
+    },
+    {
+      "act_id": 17,
+      "title": "The Companies Act, 2013",
+      "cohort": 3,
+      "status": "ingested",
+      "sections": 483,
+      "pages": 288,
+      "sha256": "096c091cbd2dc090ea09c5ad34004f0199afaa60be2f80dd0901126ef37e8d32"
+    },
+    {
+      "act_id": 18,
+      "title": "The Limited Liability Partnership Act, 2008",
+      "cohort": 3,
+      "status": "ingested",
+      "sections": 136,
+      "pages": 47,
+      "sha256": "c3b9777fb87af1ccc97a1c3f367e1a4c86ed7e43f7210d1a69fc748fb589f8c3"
+    },
+    {
+      "act_id": 19,
+      "title": "The Insolvency and Bankruptcy Code, 2016",
+      "cohort": 3,
+      "status": "ingested",
+      "sections": 285,
+      "pages": 174,
+      "sha256": "9ffe00d4207b9c0e008b58d7bd36e9fe6f5a45e20774280749d353fe364b480a"
+    },
+    {
+      "act_id": 20,
+      "title": "The Negotiable Instruments Act, 1881",
+      "cohort": 3,
+      "status": "ingested",
+      "sections": 147,
+      "pages": 32,
+      "sha256": "ed3e9db7f37052a1bc1cd665500910c5e123de888bce0375585e9a766bf38501"
+    },
+    {
+      "act_id": 21,
+      "title": "The Micro, Small and Medium Enterprises Development Act, 2006",
+      "cohort": 3,
+      "status": "ingested",
+      "sections": 19,
+      "pages": 13,
+      "sha256": "df64f0b7c867bd57559ed7bb07cdc6d22212272ab3a484bf7195794a98aafdbc"
+    },
+    {
+      "act_id": 22,
+      "title": "The Competition Act, 2002",
+      "cohort": 3,
+      "status": "ingested",
+      "sections": 93,
+      "pages": 50,
+      "sha256": "b67c79171eb694d1c94ffe1c3f190dd4f9a0b139e91651874927aea093d21217"
+    },
+    {
+      "act_id": 23,
+      "title": "The Recovery of Debts and Bankruptcy Act, 1993",
+      "cohort": 3,
+      "status": "ingested",
+      "sections": 41,
+      "pages": 23,
+      "sha256": "14d19cccfe5972144454751deac8a5f6b7748b60d7d2fd76a48cbc0c5f31ff2f"
+    },
+    {
+      "act_id": 24,
+      "title": "The Securitisation and Reconstruction of Financial Assets and Enforcement of Security Interest Act, 2002",
+      "cohort": 3,
+      "status": "ingested",
+      "sections": 59,
+      "pages": 38,
+      "sha256": "4a9f9154434d0b8e348ad0bf6db185fb77f0e8f8b4969961e430d3d2aec2ef6d"
+    },
+    {
+      "act_id": 25,
+      "title": "The Banking Regulation Act, 1949",
+      "cohort": 3,
+      "status": "ingested",
+      "sections": 119,
+      "pages": 112,
+      "sha256": "603578db1ff28454f17ffbaea0d00bb08504bc936cf1cce8089e6772d828e087"
+    },
+    {
+      "act_id": 26,
+      "title": "The Reserve Bank of India Act, 1934",
+      "cohort": 3,
+      "status": "ingested",
+      "sections": 128,
+      "pages": 93,
+      "sha256": "638a66835c20826021b078ee5436ee7b2392ebe4d5822bc7784241cfcf7ac3af"
+    },
+    {
+      "act_id": 27,
+      "title": "The Consumer Protection Act, 2019",
+      "cohort": 3,
+      "status": "ingested",
+      "sections": 103,
+      "pages": 39,
+      "sha256": "651007ae32d6479c900fb720d6c68835185d2c8457b7489a7672fd0172136cc4"
+    },
+    {
+      "act_id": 28,
+      "title": "The Bankers' Books Evidence Act, 1891",
+      "cohort": 3,
+      "status": "ingested",
+      "sections": 11,
+      "pages": 5,
+      "sha256": "e22e5dc2f039bc796de89210305b4fb52233b9f3995a06ce69ea23ab3539428c"
+    },
+    {
+      "act_id": 29,
+      "title": "The Transfer of Property Act, 1882",
+      "cohort": 4,
+      "status": "ingested",
+      "sections": 2,
+      "pages": 57,
+      "sha256": "6bd116860a0964c94aacfd9c5a6d0d42b2fd8e26dab2531f502ead12ba4511fd"
+    },
+    {
+      "act_id": 30,
+      "title": "The Registration Act, 1908",
+      "cohort": 4,
+      "status": "ingested",
+      "sections": 4,
+      "pages": 71,
+      "sha256": "bff4051a158d36bd25f7bb8d486dc98bc78d50257f4d17bc18c45a524f4917aa"
+    },
+    {
+      "act_id": 31,
+      "title": "The Indian Stamp Act, 1899",
+      "cohort": 4,
+      "status": "ingested",
+      "sections": 64,
+      "pages": 71,
+      "sha256": "fb4d0abece8010e13e5a64ac1f9bb4d87c40c92759aa38c7fb4911fcb194756f"
+    },
+    {
+      "act_id": 32,
+      "title": "The Maharashtra Stamp Act",
+      "cohort": 4,
+      "status": "already_indexed",
+      "section_count": 88,
+      "page_count": 78
+    },
+    {
+      "act_id": 33,
+      "title": "The Maharashtra Rent Control Act, 1999",
+      "cohort": 4,
+      "status": "already_indexed",
+      "section_count": 50,
+      "page_count": 44
+    },
+    {
+      "act_id": 34,
+      "title": "The Maharashtra Ownership Flats (Regulation of the Promotion of Construction, Sale, Management and Transfer) Act, 1963",
+      "cohort": 4,
+      "status": "ingested",
+      "sections": 24,
+      "pages": 17,
+      "sha256": "85d0be71e3eb45330e292ad9efafd3caeb841c08cefeaa17b8cf272051cf03ee"
+    },
+    {
+      "act_id": 35,
+      "title": "The Real Estate (Regulation and Development) Act, 2016",
+      "cohort": 4,
+      "status": "ingested",
+      "sections": 91,
+      "pages": 36,
+      "sha256": "f09e5b6c4788ca402e65b5efcb57669b9005b66af07ec4371eaf8d6529dc2f1d"
+    },
+    {
+      "act_id": 36,
+      "title": "Maharashtra Real Estate (Regulation and Development) (Registration of real estate projects, registration of real estate agents, rates of interest and disclosures on website) Rules, 2017",
+      "cohort": 4,
+      "status": "ingested",
+      "sections": 2,
+      "pages": 152,
+      "sha256": "65c3b295f40441298ea6ab12294f82291f2ca0b425a9879fb17bbd94f3bb642e"
+    },
+    {
+      "act_id": 37,
+      "title": "The Maharashtra Co-operative Societies Act, 1960",
+      "cohort": 4,
+      "status": "ingested",
+      "sections": 163,
+      "pages": 147,
+      "sha256": "6d73b9556416946a3fe36a8c5ecf1a9dd68ad6ec5150cd04072644572b7b8a5a"
+    },
+    {
+      "act_id": 38,
+      "title": "The Maharashtra Co-operative Societies Rules, 1961",
+      "cohort": 4,
+      "status": "ingested",
+      "sections": 1,
+      "pages": 5,
+      "sha256": "b83c1c4ba00be626c0d97098e01074e0394c694dc325772785fa4e02ab7cda38"
+    },
+    {
+      "act_id": 39,
+      "title": "The Maharashtra Apartment Ownership Act, 1970",
+      "cohort": 4,
+      "status": "ingested",
+      "sections": 33,
+      "pages": 18,
+      "sha256": "f5ca95b967c49a656656eccc6e5f15ea73b686cb7fed9448526296924f0bba41"
+    },
+    {
+      "act_id": 40,
+      "title": "The Maharashtra Housing and Area Development Act, 1976",
+      "cohort": 4,
+      "status": "ingested",
+      "sections": 181,
+      "pages": 82,
+      "sha256": "b088823f6417c3ece4119d456bb91894469846c4e026e54c1cc600bfbb3aa3ce"
+    },
+    {
+      "act_id": 41,
+      "title": "The Maharashtra Regional and Town Planning Act, 1966",
+      "cohort": 4,
+      "status": "ingested",
+      "sections": 174,
+      "pages": 101,
+      "sha256": "a062773e5c1c2d105af246063b99397521e2c709f74835193854658d46c3a6c0"
+    },
+    {
+      "act_id": 42,
+      "title": "The Maharashtra Slum Areas (Improvement, Clearance and Redevelopment) Act, 1971",
+      "cohort": 4,
+      "status": "ingested",
+      "sections": 72,
+      "pages": 51,
+      "sha256": "3d7e2e2272013295562bcb9dfecc793d154a9ac1fb7d6794728b03c2f3e08796"
+    },
+    {
+      "act_id": 43,
+      "title": "The Maharashtra Land Revenue Code, 1966",
+      "cohort": 4,
+      "status": "ingested",
+      "sections": 310,
+      "pages": 116,
+      "sha256": "00ec56451d0d5ae47c6d6b234d8efe58d05614f09410d7dac43fb8e467ddf692"
+    },
+    {
+      "act_id": 44,
+      "title": "The Indian Easements Act, 1882",
+      "cohort": 4,
+      "status": "ingested",
+      "sections": 66,
+      "pages": 20,
+      "sha256": "5b5d1e024607bffb9e5860d437a26d9a19f5708173e4a23916b8ccf42bc66a61"
+    },
+    {
+      "act_id": 45,
+      "title": "The Public Premises (Eviction of Unauthorised Occupants) Act, 1971",
+      "cohort": 4,
+      "status": "ingested",
+      "sections": 29,
+      "pages": 17,
+      "sha256": "dbd14249fa8f78521dfddbf9f360e95d3db2d6e91e8fdd5bcc0399157a803a20"
+    },
+    {
+      "act_id": 46,
+      "title": "The Bharatiya Nyaya Sanhita, 2023",
+      "cohort": 5,
+      "status": "ingested",
+      "sections": 305,
+      "pages": 112,
+      "sha256": "d4449e9995b21fd52627811d08f9d21feda6a3678b7e5355b651242d152167f5"
+    },
+    {
+      "act_id": 47,
+      "title": "The Bharatiya Nagarik Suraksha Sanhita, 2023",
+      "cohort": 5,
+      "status": "ingested",
+      "sections": 513,
+      "pages": 279,
+      "sha256": "9717e234049261ee7e33710c849718b5470fc41d9330dee4fa2d0bbd99291183"
+    },
+    {
+      "act_id": 48,
+      "title": "The Bharatiya Sakshya Adhiniyam, 2023",
+      "cohort": 5,
+      "status": "ingested",
+      "sections": 2,
+      "pages": 47,
+      "sha256": "100c6173fc451d9099274d53bf73b6384bac8ac02ea1971f6e18bbef94979a60"
+    },
+    {
+      "act_id": 49,
+      "title": "The Indian Penal Code, 1860",
+      "cohort": 5,
+      "status": "ingested",
+      "sections": 3,
+      "pages": 5,
+      "sha256": "fee6e0accd673e17eede1776868d3c56a26a9199efb51ab18c662f787d3df8f7"
+    },
+    {
+      "act_id": 50,
+      "title": "The Code of Criminal Procedure, 1973",
+      "cohort": 5,
+      "status": "ingested",
+      "sections": 3,
+      "pages": 397,
+      "sha256": "f4c7fcf0c762c3f62b000b4f54044149afa97c028c2a178e58feb67abd91b60a"
+    },
+    {
+      "act_id": 51,
+      "title": "The Indian Evidence Act, 1872",
+      "cohort": 5,
+      "status": "ingested",
+      "sections": 4,
+      "pages": 74,
+      "sha256": "403ae31e1420d82d21a82dc162af1a9701ddc34cfa2040f109d9b7c48e2287a2"
+    },
+    {
+      "act_id": 52,
+      "title": "The Narcotic Drugs and Psychotropic Substances Act, 1985",
+      "cohort": 5,
+      "status": "ingested",
+      "sections": 1,
+      "pages": 12,
+      "sha256": "9129288654bd69f684bbecdc41fd1ef9a21d26a3e25bfa01fc3bd579f7456d5b"
+    },
+    {
+      "act_id": 53,
+      "title": "The Prevention of Money-Laundering Act, 2002",
+      "cohort": 5,
+      "status": "ingested",
+      "sections": 80,
+      "pages": 51,
+      "sha256": "7c346efc01050956cf2014b8967348c26fb6d6c947f6721cd33c6a7b993560ea"
+    },
+    {
+      "act_id": 54,
+      "title": "The Prevention of Corruption Act, 1988",
+      "cohort": 5,
+      "status": "ingested",
+      "sections": 36,
+      "pages": 20,
+      "sha256": "7696d19f33678c31a805f8acb05ac115f73229a0c75b0c0ca134dc34f3effca7"
+    },
+    {
+      "act_id": 55,
+      "title": "The Protection of Children from Sexual Offences Act, 2012",
+      "cohort": 5,
+      "status": "ingested",
+      "sections": 1,
+      "pages": 14,
+      "sha256": "309be24ebeea0f16d15eee6b567558fdfe545503a0701fe2ca1639d488ca83b9"
+    },
+    {
+      "act_id": 56,
+      "title": "The Juvenile Justice (Care and Protection of Children) Act, 2015",
+      "cohort": 5,
+      "status": "ingested",
+      "sections": 106,
+      "pages": 45,
+      "sha256": "3f217c1acadd6066947e0ec5f120fa9286fa98a49f628f45f7a6849ba3c4f259"
+    },
+    {
+      "act_id": 57,
+      "title": "The Unlawful Activities (Prevention) Act, 1967",
+      "cohort": 5,
+      "status": "ingested",
+      "sections": 2,
+      "pages": 14,
+      "sha256": "db9004172b620a273500af2da7f01e6eeace7106609a107b13ec566f64abd96b"
+    },
+    {
+      "act_id": 58,
+      "title": "The Maharashtra Control of Organised Crime Act, 1999",
+      "cohort": 5,
+      "status": "ingested",
+      "sections": 29,
+      "pages": 17,
+      "sha256": "3678f81e3bb7b4897a7c2188934a9aea60d45e582b2c08b03278f8cbdf403fb0"
+    },
+    {
+      "act_id": 59,
+      "title": "The Maharashtra Protection of Interest of Depositors (in Financial Establishments) Act, 1999",
+      "cohort": 5,
+      "status": "ingested",
+      "sections": 19,
+      "pages": 8,
+      "sha256": "4dd134cbfe8a745deb233b06f58f9cee4cdfc335b5a6660c55f0c89b4969022a"
+    },
+    {
+      "act_id": 60,
+      "title": "The Maharashtra Money-Lending (Regulation) Act, 2014",
+      "cohort": 5,
+      "status": "ingested",
+      "sections": 52,
+      "pages": 23,
+      "sha256": "7fecc46630a78638f62f1e8017aede095a2c612e033057506a9c0adf9cab79d2"
+    },
+    {
+      "act_id": 61,
+      "title": "The Maharashtra Police Act",
+      "cohort": 5,
+      "status": "ingested",
+      "sections": 168,
+      "pages": 87,
+      "sha256": "c7224aeb0dd09462e9b5d57171fc6b09e5bb1a70913e512c352fc9388f313fab"
+    },
+    {
+      "act_id": 62,
+      "title": "The Hindu Marriage Act, 1955",
+      "cohort": 6,
+      "status": "ingested",
+      "sections": 40,
+      "pages": 13,
+      "sha256": "c047ee81d7559ec407dbd0c29ebe7c95e33f7bbb219dadee17ea9bdf07aed5e2"
+    },
+    {
+      "act_id": 63,
+      "title": "The Hindu Succession Act, 1956",
+      "cohort": 6,
+      "status": "ingested",
+      "sections": 14,
+      "pages": 17,
+      "sha256": "d2c8389d14b02be68dbf4d1ff039cc3c0a64378a0748683292583be35b748b34"
+    },
+    {
+      "act_id": 64,
+      "title": "The Hindu Minority and Guardianship Act, 1956",
+      "cohort": 6,
+      "status": "ingested",
+      "sections": 16,
+      "pages": 8,
+      "sha256": "268e5a717aa7a89f4f2de09cadbeaf8d48a97bc3c4dde08b6a8ebaec29cefcdd"
+    },
+    {
+      "act_id": 65,
+      "title": "The Hindu Adoptions and Maintenance Act, 1956",
+      "cohort": 6,
+      "status": "ingested",
+      "sections": 4,
+      "pages": 9,
+      "sha256": "9c4c2ccbd4fe71ad4bb27eb308176be4dee958c357d73134e623f758b338cbcf"
+    },
+    {
+      "act_id": 66,
+      "title": "The Guardians and Wards Act, 1890",
+      "cohort": 6,
+      "status": "ingested",
+      "sections": 51,
+      "pages": 17,
+      "sha256": "bdd4abc84270bd815b7d35d1f7630b12f6b2ea01de06ae188a41b4003d157c80"
+    },
+    {
+      "act_id": 67,
+      "title": "The Family Courts Act, 1984",
+      "cohort": 6,
+      "status": "ingested",
+      "sections": 27,
+      "pages": 8,
+      "sha256": "9be4ca49cd3902d21cf1c17cb2bb1533a68eeeb67e292b0cf6831bb9f4748755"
+    },
+    {
+      "act_id": 68,
+      "title": "The Special Marriage Act, 1954",
+      "cohort": 6,
+      "status": "ingested",
+      "sections": 3,
+      "pages": 25,
+      "sha256": "a4f09d373db411bd2611a71c1e069c4a01b64102f0ed38ac2ba1e5b721a1d815"
+    },
+    {
+      "act_id": 69,
+      "title": "The Protection of Women from Domestic Violence Act, 2005",
+      "cohort": 6,
+      "status": "ingested",
+      "sections": 1,
+      "pages": 1,
+      "sha256": "2aa62879d9605788f25b7a4602c4ed8eb33ef7d9eb78ec9b6904eba4dd17c7b8"
+    },
+    {
+      "act_id": 70,
+      "title": "The Indian Succession Act, 1925",
+      "cohort": 6,
+      "status": "ingested",
+      "sections": 340,
+      "pages": 103,
+      "sha256": "3729e375c7048ad9aee79ab8e5084f73e54a779155ead7b78d95e5a975bec03f"
+    },
+    {
+      "act_id": 71,
+      "title": "The Dowry Prohibition Act, 1961",
+      "cohort": 6,
+      "status": "ingested",
+      "sections": 15,
+      "pages": 5,
+      "sha256": "30214bc15492be9d9a056be1cc0dd8a9244278063192413c48510031a218da54"
+    },
+    {
+      "act_id": 72,
+      "title": "The Muslim Personal Law (Shariat) Application Act, 1937",
+      "cohort": 6,
+      "status": "ingested",
+      "sections": 9,
+      "pages": 4,
+      "sha256": "fd438241bebe4b36c77e336656b1e560450e21daf44bf32173d8d4cbfe1f8f4d"
+    },
+    {
+      "act_id": 73,
+      "title": "The Dissolution of Muslim Marriages Act, 1939",
+      "cohort": 6,
+      "status": "ingested",
+      "sections": 6,
+      "pages": 3,
+      "sha256": "c74b2f54a8bf0544d0396a5f72b2c22d7f6497982609dcb7d507498619ef1d6a"
+    },
+    {
+      "act_id": 74,
+      "title": "The Muslim Women (Protection of Rights on Marriage) Act, 2019",
+      "cohort": 6,
+      "status": "ingested",
+      "sections": 11,
+      "pages": 5,
+      "sha256": "47cc04f72de7ac74c22c83c9902858fd6d79340ceeb3ddac85b277e689c25aab"
+    },
+    {
+      "act_id": 75,
+      "title": "The Divorce Act, 1869",
+      "cohort": 6,
+      "status": "ingested",
+      "sections": 61,
+      "pages": 23,
+      "sha256": "6b4f567d1763cb83fee3a787efdcf3c1b533113c46d4948710504d812457dc69"
+    },
+    {
+      "act_id": 76,
+      "title": "The Parsi Marriage and Divorce Act, 1936",
+      "cohort": 6,
+      "status": "ingested",
+      "sections": 55,
+      "pages": 18,
+      "sha256": "9e72a75f0d95cb5b581deec46d886a8398f00005c6cd2640cf9d8743021340cc"
+    },
+    {
+      "act_id": 77,
+      "title": "The Maintenance and Welfare of Parents and Senior Citizens Act, 2007",
+      "cohort": 6,
+      "status": "ingested",
+      "sections": 35,
+      "pages": 9,
+      "sha256": "e9e284cdea6fa7b221557b6cb023f7321e224f55734b92013a17872f69fa0dd9"
+    },
+    {
+      "act_id": 78,
+      "title": "The Code on Wages, 2019",
+      "cohort": 7,
+      "status": "ingested",
+      "sections": 71,
+      "pages": 32,
+      "sha256": "23b93fe0426b540ca833d3348f58c7564efcf33c30dfaac61ff1ec36cb2cb687"
+    },
+    {
+      "act_id": 79,
+      "title": "The Industrial Relations Code, 2020",
+      "cohort": 7,
+      "status": "ingested",
+      "sections": 100,
+      "pages": 67,
+      "sha256": "903060e794247dc60e355e45b2e8c8bf5e5d9442babad7f5a1836ba34e527697"
+    },
+    {
+      "act_id": 80,
+      "title": "The Code on Social Security, 2020",
+      "cohort": 7,
+      "status": "ingested",
+      "sections": 161,
+      "pages": 113,
+      "sha256": "3878d95fc1343c62b56288c484a4dd7369dd279bbe601c6a6f522aef892fb605"
+    },
+    {
+      "act_id": 81,
+      "title": "The Occupational Safety, Health and Working Conditions Code, 2020",
+      "cohort": 7,
+      "status": "ingested",
+      "sections": 141,
+      "pages": 84,
+      "sha256": "d72c3c51f58617de86d457c17fda6f73e16bf53eacb637012998df4ebf2ae214"
+    },
+    {
+      "act_id": 82,
+      "title": "The Sexual Harassment of Women at Workplace (Prevention, Prohibition and Redressal) Act, 2013",
+      "cohort": 7,
+      "status": "ingested",
+      "sections": 32,
+      "pages": 14,
+      "sha256": "2c758fdba9409e931b6ee3add6c4068a90142d3cae49e23884553d964e52a9e6"
+    },
+    {
+      "act_id": 83,
+      "title": "The Maharashtra Shops and Establishments (Regulation of Employment and Conditions of Service) Act, 2017",
+      "cohort": 7,
+      "status": "ingested",
+      "sections": 43,
+      "pages": 18,
+      "sha256": "280632109f2511aa0580f304e6835d34723f7f48618aa8ee55c77c9f6b08d4ef"
+    },
+    {
+      "act_id": 84,
+      "title": "The Maharashtra Recognition of Trade Unions and Prevention of Unfair Labour Practices Act, 1971",
+      "cohort": 7,
+      "status": "ingested",
+      "sections": 67,
+      "pages": 28,
+      "sha256": "bff12b3bc1eb28c67257efef00d142b76bd662ed8cb98b11204b2a4837a01bd7"
+    },
+    {
+      "act_id": 85,
+      "title": "The Copyright Act, 1957",
+      "cohort": 8,
+      "status": "ingested",
+      "sections": 99,
+      "pages": 50,
+      "sha256": "fc1e8ab7dee763fcda531eedc44de835c8e2bc4b9aaaf8cf29730e45b4289523"
+    },
+    {
+      "act_id": 86,
+      "title": "The Trade Marks Act, 1999",
+      "cohort": 8,
+      "status": "ingested",
+      "sections": 157,
+      "pages": 56,
+      "sha256": "3ee682af4ec4701a00aa27842e0add2321a6aed75808aa1c5ca33591e85d4986"
+    },
+    {
+      "act_id": 87,
+      "title": "The Patents Act, 1970",
+      "cohort": 8,
+      "status": "ingested",
+      "sections": 170,
+      "pages": 72,
+      "sha256": "583f2461d79572692d9046e5ac13bb7cff82eedb7863c565da02d9a0893cb8f6"
+    },
+    {
+      "act_id": 88,
+      "title": "The Designs Act, 2000",
+      "cohort": 8,
+      "status": "ingested",
+      "sections": 49,
+      "pages": 18,
+      "sha256": "25d76416d93f1c4b510189f8857941a8228437f7494382b228fdbd74e9e87be5"
+    },
+    {
+      "act_id": 89,
+      "title": "The Cinematograph Act, 1952",
+      "cohort": 8,
+      "status": "ingested",
+      "sections": 2,
+      "pages": 16,
+      "sha256": "cd6589c3f1b848cdcf2bdbbab105c42f99e5ad2a4135608023d22571de1a79fe"
+    },
+    {
+      "act_id": 90,
+      "title": "The Information Technology Act, 2000",
+      "cohort": 8,
+      "status": "ingested",
+      "sections": 11,
+      "pages": 34,
+      "sha256": "4a3f0c373b4c309f0f27c1c711b74adfa98ebbcf13250bdbe5bed64f9f0033d5"
+    },
+    {
+      "act_id": 91,
+      "title": "The Digital Personal Data Protection Act, 2023",
+      "cohort": 8,
+      "status": "ingested",
+      "sections": 45,
+      "pages": 25,
+      "sha256": "dda561b9fd6420e1b99157b60f92bb0470a6154c6d559bbee3482ac255ac2c24"
+    },
+    {
+      "act_id": 92,
+      "title": "The Digital Personal Data Protection Rules, 2025",
+      "cohort": 8,
+      "status": "ingested",
+      "sections": 1,
+      "pages": 1,
+      "sha256": "0de59b2277e0514c0b6ca11181e1e4dd21f3186c93b0592fb7111f72f4373d92"
+    },
+    {
+      "act_id": 93,
+      "title": "The Constitution of India",
+      "cohort": 9,
+      "status": "ingested",
+      "sections": 20,
+      "pages": 268,
+      "sha256": "91437617f28a800e4090aade1825017c5c3f82e5ede2e4b01b6d85966da10197"
+    },
+    {
+      "act_id": 94,
+      "title": "The Advocates Act, 1961",
+      "cohort": 9,
+      "status": "ingested",
+      "sections": 4,
+      "pages": 35,
+      "sha256": "9b9758b1fc5183b3e7af1fbe76f0814b6dab607424e67969041471cd0aacd0e3"
+    },
+    {
+      "act_id": 95,
+      "title": "The Contempt of Courts Act, 1971",
+      "cohort": 9,
+      "status": "ingested",
+      "sections": 1,
+      "pages": 10,
+      "sha256": "8643668d762d4a2b839bb064f2dc52825f25a863437f86af234680b25d36c4fb"
+    },
+    {
+      "act_id": 96,
+      "title": "The Administrative Tribunals Act, 1985",
+      "cohort": 9,
+      "status": "ingested",
+      "sections": 38,
+      "pages": 21,
+      "sha256": "337cc2d6e71fe3005881fea1170a6858d960f095847fc601b5f65b8cec5d4b30"
+    },
+    {
+      "act_id": 97,
+      "title": "The Right to Information Act, 2005",
+      "cohort": 9,
+      "status": "ingested",
+      "sections": 2,
+      "pages": 23,
+      "sha256": "cfebace9ef657d54a0c4d100379e61bad91d58e4520f4ed1ac0a838341187515"
+    },
+    {
+      "act_id": 98,
+      "title": "The Income-tax Act, 1961",
+      "cohort": 9,
+      "status": "ingested",
+      "sections": 4,
+      "pages": 230,
+      "sha256": "f21154ca2c37c90fc4bfe0b464e3ab6b0b5ad84dda641b9383a87aa38e75ec66"
+    },
+    {
+      "act_id": 99,
+      "title": "The Direct Tax Code / Income-tax Act, 2025",
+      "cohort": 9,
+      "status": "not_found"
+    },
+    {
+      "act_id": 100,
+      "title": "The Central Goods and Services Tax Act, 2017",
+      "cohort": 9,
+      "status": "ingested",
+      "sections": 4,
+      "pages": 103,
+      "sha256": "948bdd6a0ede158e3f32002c2e8494c46865f8f4128fb296bdf7bb166325e3b1"
+    },
+    {
+      "act_id": 101,
+      "title": "The Maharashtra Goods and Services Tax Act, 2017",
+      "cohort": 9,
+      "status": "ingested",
+      "sections": 64,
+      "pages": 118,
+      "sha256": "6a365d18bb0fa3bfe2f22d327a37b9419570533df89282a0ef014e8ec3ad5bae"
+    },
+    {
+      "act_id": 102,
+      "title": "The Integrated Goods and Services Tax Act, 2017",
+      "cohort": 9,
+      "status": "ingested",
+      "sections": 2,
+      "pages": 17,
+      "sha256": "20c9531aaae8a368be49d2d860c5289294c63e44c2dff6a6f5e9f98fc3338646"
+    },
+    {
+      "act_id": 103,
+      "title": "The Customs Act, 1962",
+      "cohort": 9,
+      "status": "ingested",
+      "sections": 1,
+      "pages": 4,
+      "sha256": "e149d94b54882010f5f5a5a30761d73edd927e2844fee421801aad052be59ca5"
+    },
+    {
+      "act_id": 104,
+      "title": "The Maharashtra Prohibition Act",
+      "cohort": 9,
+      "status": "ingested",
+      "sections": 134,
+      "pages": 73,
+      "sha256": "2935ad0227e9b1fe24be643eea330130fcc256fe3b1d8f5987388b3a12627c9b"
+    },
+    {
+      "act_id": 105,
+      "title": "The Bombay City Civil Court Act, 1948",
+      "cohort": 9,
+      "status": "already_indexed",
+      "section_count": 15,
+      "page_count": 8
+    },
+    {
+      "act_id": 106,
+      "title": "The Maharashtra Court-fees Act",
+      "cohort": 9,
+      "status": "ingested",
+      "sections": 48,
+      "pages": 52,
+      "sha256": "ba2d34043c4b76dd994ce4a7e87ef166f0839fae150b8bf854c01b93035f6222"
+    },
+    {
+      "act_id": 107,
+      "title": "The Presidency Small Cause Courts Act, 1882",
+      "cohort": 9,
+      "status": "ingested",
+      "sections": 1,
+      "pages": 106,
+      "sha256": "c35ce424cd46ed1570bb69508488b1b61ea2e2bdc3f13911eb2026ab78da7563"
+    },
+    {
+      "act_id": 108,
+      "title": "The Bombay High Court (Original Side) Rules, 1980",
+      "cohort": 9,
+      "status": "ingested",
+      "sections": 3,
+      "pages": 14,
+      "sha256": "1f4e6a1a98c6829d412e3eaeb027d3ec504ae985713b460d7c8bddd388a77ea8"
+    },
+    {
+      "act_id": 109,
+      "title": "The Bombay High Court (Appellate Side) Rules, 1960",
+      "cohort": 9,
+      "status": "ingested",
+      "sections": 1,
+      "pages": 3,
+      "sha256": "d28431a82a69dc9e54183c10a7a0d138e864a56eef67906703dcdf327b407e4e"
+    },
+    {
+      "act_id": 110,
+      "title": "The Bombay City Civil Court Rules, 1948",
+      "cohort": 9,
+      "status": "not_found"
+    },
+    {
+      "act_id": 111,
+      "title": "The Presidency Small Causes Court Rules",
+      "cohort": 9,
+      "status": "not_found"
+    },
+    {
+      "act_id": 112,
+      "title": "The Family Courts (Maharashtra) Rules and Regulations",
+      "cohort": 9,
+      "status": "not_found"
+    },
+    {
+      "act_id": 113,
+      "title": "The Supreme Court Rules, 2013",
+      "cohort": 9,
+      "status": "not_found"
+    },
+    {
+      "act_id": 114,
+      "title": "The National Company Law Tribunal Rules, 2016",
+      "cohort": 9,
+      "status": "ingested",
+      "sections": 40,
+      "pages": 105,
+      "sha256": "6fa78c025891892934a0ad6432ae240400b9cae4d52cfc3eaab0d43fc82cd4ad"
+    },
+    {
+      "act_id": 115,
+      "title": "The National Company Law Appellate Tribunal Rules, 2016",
+      "cohort": 9,
+      "status": "ingested",
+      "sections": 1,
+      "pages": 44,
+      "sha256": "1d3d2662f6bb809a400b7bad23a807bc36eb5135cc74eda5e5ccc2fec36495bc"
+    },
+    {
+      "act_id": 116,
+      "title": "The Criminal Manual and Practice Directions (Maharashtra)",
+      "cohort": 9,
+      "status": "not_found"
+    },
+    {
+      "act_id": 117,
+      "title": "The Commercial Division Practice Directions (Bombay High Court)",
+      "cohort": 9,
+      "status": "not_found"
+    }
+  ]
+}

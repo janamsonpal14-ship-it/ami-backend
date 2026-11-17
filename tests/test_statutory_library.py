@@ -186,3 +186,14 @@ def test_statutory_version_control_and_applicable_law_on_date(client_and_db):
     r_am = client.get(f"/api/bare-acts/{act_id}/amendments", headers=headers)
     assert r_am.status_code == 200
     assert len(r_am.json()) == 2
+
+
+def test_mobile_db_download_endpoint(client_and_db):
+    client, _ = client_and_db
+    headers = _auth_headers(client)
+
+    resp = client.get("/api/system/download-mobile-db", headers=headers)
+    assert resp.status_code == 200
+    assert resp.headers.get("content-type") == "application/x-sqlite3"
+    assert "amico.db" in resp.headers.get("content-disposition", "")
+    assert resp.content.startswith(b"SQLite format 3")

@@ -115,6 +115,8 @@ def ingest_pilot_act(
     }
     metadata_path.write_text(json.dumps(sidecar_meta, indent=2), encoding="utf-8")
 
+    rel_pdf_path = f"legal_library/{category_slug}/{act_slug}/current/{target_filename}"
+
     # Check if this Act already exists in the database
     title = act_def["title"]
     short_title = act_def.get("short_title", title)
@@ -137,7 +139,7 @@ def ingest_pilot_act(
         act.source_url = act_def.get("source_url")
         act.source_note = f"Verified from {act_def.get('source_provider', 'Official Source')}"
         act.sha256_hash = sha256_hash
-        act.file_path = str(target_pdf_path)
+        act.file_path = rel_pdf_path
         act.is_demo = False
         if act_def.get("enactment_date"):
             act.enactment_date = datetime.strptime(act_def["enactment_date"], "%Y-%m-%d").date()
@@ -161,7 +163,7 @@ def ingest_pilot_act(
             sha256_hash=sha256_hash,
             tags=f"{category_slug}, {act_def.get('jurisdiction')}, verified_library",
             summary_text=f"Official statutory text of {title} ({act_def.get('act_no', '')}).",
-            file_path=str(target_pdf_path),
+            file_path=rel_pdf_path,
             is_demo=False,
         )
         db.add(act)
@@ -172,7 +174,7 @@ def ingest_pilot_act(
         _extract_and_index_sections_from_pdf(db, act, target_pdf_path)
 
     # Ingest Current and Historical Versions
-    _register_versions_for_act(db, act, act_def, target_pdf_path, sha256_hash)
+    _register_versions_for_act(db, act, act_def, target_pdf_path, sha256_hash, rel_pdf_path=rel_pdf_path)
 
     # Ingest Known Amendments
     _register_amendments_for_act(db, act, act_def)
@@ -235,9 +237,15 @@ def _register_versions_for_act(
     act_def: dict[str, Any],
     pdf_path: Path,
     sha256_hash: str,
+    rel_pdf_path: str | None = None,
 ) -> None:
     """Register current version and manifest historical versions in bare_act_versions."""
     existing_tags = {v.version_tag for v in act.versions}
+    stored_path = rel_pdf_path or (
+        str(pdf_path.relative_to(cfg.DATA_DIR))
+        if pdf_path.is_relative_to(cfg.DATA_DIR)
+        else str(pdf_path)
+    )
 
     # Ensure 'current' version is registered
     if "current" not in existing_tags:
@@ -250,7 +258,7 @@ def _register_versions_for_act(
                 effective_from=commence_d,
                 effective_to=None,
                 is_current=True,
-                file_path=str(pdf_path),
+                file_path=stored_path,
                 sha256_hash=sha256_hash,
                 notes="Current applicable official text verified from official repository.",
             )

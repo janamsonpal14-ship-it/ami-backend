@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends, File, HTTPException, Query, Request, Response, UploadFile, status
-from sqlalchemy import desc, select
+from fastapi.responses import FileResponse
+from sqlalchemy import desc, select, text
 from sqlalchemy.orm import Session
 
 import app.config as cfg
@@ -159,6 +160,34 @@ async def backup_restore(
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Please upload a valid .zip backup bundle.")
     zip_bytes = await file.read()
     return restore_backup_bundle(db, filename=file.filename or "backup.zip", zip_bytes=zip_bytes, actor=user.login_id)
+
+
+@router.get("/system/download-mobile-db")
+def download_mobile_db(
+    _user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Serve optimized SQLite database for 100% offline courtroom storage on mobile devices."""
+    # Flush SQLite write-ahead log cleanly into amico.db
+    try:
+        db.execute(text("PRAGMA wal_checkpoint(FULL);"))
+        db.commit()
+    except Exception:
+        pass
+
+    db_path = cfg.DB_PATH
+    if not db_path.exists():
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Database file not found.")
+
+    return FileResponse(
+        path=str(db_path),
+        filename="amico.db",
+        media_type="application/x-sqlite3",
+        headers={
+            "Content-Disposition": 'attachment; filename="amico.db"',
+            "Cache-Control": "no-cache",
+        },
+    )
 
 
 @router.get("/audit-logs", response_model=list[AuditLogOut])

@@ -790,10 +790,18 @@ def _resolve_stored_act_file(act: BareAct) -> Path:
     if not act.file_path:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Original PDF/text file is not attached to this entry.")
     p = Path(act.file_path)
+    if not p.is_absolute():
+        p = cfg.DATA_DIR / p
     if not p.exists():
-        p = cfg.BARE_ACTS_DIR / p.name
-    if not p.exists():
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Stored Bare Act file could not be found on disk.")
+        # Fallback to bare_acts upload dir or legal_library direct name
+        fallback_p = cfg.BARE_ACTS_DIR / p.name
+        if fallback_p.exists():
+            return fallback_p
+        # Search anywhere inside legal_library for matching filename
+        for match in (cfg.DATA_DIR / "legal_library").glob(f"**/{p.name}"):
+            if match.is_file():
+                return match
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Stored Bare Act file '{p.name}' could not be found on disk.")
     return p
 
 

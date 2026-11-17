@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: ami-backend
+    env: docker
+    plan: free
+    region: oregon
+    dockerfilePath: ./Dockerfile
+    envVars:
+      - key: PYTHONUNBUFFERED
+        value: "1"
+      - key: AMICO_JWT_SECRET
+        generateValue: true
