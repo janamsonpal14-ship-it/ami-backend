@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from collections.abc import Generator
 from pathlib import Path
 
@@ -44,7 +45,32 @@ def create_sqlite_engine(db_path: Path | str | None = None):
     return engine
 
 
-engine = create_sqlite_engine()
+def create_app_engine():
+    """Create database engine: PostgreSQL/Supabase when DATABASE_URL is set, otherwise SQLite."""
+    raw_url = (
+        os.environ.get("DATABASE_URL")
+        or os.environ.get("SUPABASE_DATABASE_URL")
+        or os.environ.get("AMI_DATABASE_URL")
+    )
+    if raw_url:
+        url = raw_url.strip()
+        if url.startswith("postgres://"):
+            url = url.replace("postgres://", "postgresql+psycopg2://", 1)
+        elif url.startswith("postgresql://") and not url.startswith("postgresql+"):
+            url = url.replace("postgresql://", "postgresql+psycopg2://", 1)
+
+        return create_engine(
+            url,
+            pool_pre_ping=True,
+            pool_size=5,
+            max_overflow=10,
+            pool_recycle=300,
+            future=True,
+        )
+    return create_sqlite_engine()
+
+
+engine = create_app_engine()
 SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False, expire_on_commit=False)
 
 
@@ -58,47 +84,52 @@ def get_db() -> Generator[Session, None, None]:
 
 
 def ensure_additive_schema(target_engine=None) -> None:
-    """Safely add additive Phase 4 columns on existing pre-Phase-4 SQLite files."""
+    """Safely add additive columns and ensure all tables exist."""
     eng = target_engine or engine
-    with eng.begin() as conn:
-        cols = {row[1] for row in conn.exec_driver_sql("PRAGMA table_info(bare_acts);").fetchall()}
-        if "file_path" not in cols:
-            conn.exec_driver_sql("ALTER TABLE bare_acts ADD COLUMN file_path VARCHAR(500);")
-        if "page_count" not in cols:
-            conn.exec_driver_sql("ALTER TABLE bare_acts ADD COLUMN page_count INTEGER NOT NULL DEFAULT 0;")
-        if "section_count" not in cols:
-            conn.exec_driver_sql("ALTER TABLE bare_acts ADD COLUMN section_count INTEGER NOT NULL DEFAULT 0;")
-        if "act_no" not in cols:
-            conn.exec_driver_sql("ALTER TABLE bare_acts ADD COLUMN act_no VARCHAR(40);")
-        if "category_slug" not in cols:
-            conn.exec_driver_sql("ALTER TABLE bare_acts ADD COLUMN category_slug VARCHAR(100);")
-        if "enactment_date" not in cols:
-            conn.exec_driver_sql("ALTER TABLE bare_acts ADD COLUMN enactment_date DATE;")
-        if "commencement_date" not in cols:
-            conn.exec_driver_sql("ALTER TABLE bare_acts ADD COLUMN commencement_date DATE;")
-        if "source_url" not in cols:
-            conn.exec_driver_sql("ALTER TABLE bare_acts ADD COLUMN source_url VARCHAR(500);")
-        if "sha256_hash" not in cols:
-            conn.exec_driver_sql("ALTER TABLE bare_acts ADD COLUMN sha256_hash VARCHAR(64);")
+    if eng.dialect.name == "sqlite":
+        with eng.begin() as conn:
+            cols = {row[1] for row in conn.exec_driver_sql("PRAGMA table_info(bare_acts);").fetchall()}
+            if "file_path" not in cols:
+                conn.exec_driver_sql("ALTER TABLE bare_acts ADD COLUMN file_path VARCHAR(500);")
+            if "page_count" not in cols:
+                conn.exec_driver_sql("ALTER TABLE bare_acts ADD COLUMN page_count INTEGER NOT NULL DEFAULT 0;")
+            if "section_count" not in cols:
+                conn.exec_driver_sql("ALTER TABLE bare_acts ADD COLUMN section_count INTEGER NOT NULL DEFAULT 0;")
+            if "act_no" not in cols:
+                conn.exec_driver_sql("ALTER TABLE bare_acts ADD COLUMN act_no VARCHAR(40);")
+            if "category_slug" not in cols:
+                conn.exec_driver_sql("ALTER TABLE bare_acts ADD COLUMN category_slug VARCHAR(100);")
+            if "enactment_date" not in cols:
+                conn.exec_driver_sql("ALTER TABLE bare_acts ADD COLUMN enactment_date DATE;")
+            if "commencement_date" not in cols:
+                conn.exec_driver_sql("ALTER TABLE bare_acts ADD COLUMN commencement_date DATE;")
+            if "source_url" not in cols:
+                conn.exec_driver_sql("ALTER TABLE bare_acts ADD COLUMN source_url VARCHAR(500);")
+            if "sha256_hash" not in cols:
+                conn.exec_driver_sql("ALTER TABLE bare_acts ADD COLUMN sha256_hash VARCHAR(64);")
 
-        # Additive column for Part 4 judgments cache
-        tables = {row[0] for row in conn.exec_driver_sql("SELECT name FROM sqlite_master WHERE type='table';").fetchall()}
-        if "bare_act_ai_analysis" in tables:
-            analysis_cols = {row[1] for row in conn.exec_driver_sql("PRAGMA table_info(bare_act_ai_analysis);").fetchall()}
-            if "judgments_json" not in analysis_cols:
-                conn.exec_driver_sql("ALTER TABLE bare_act_ai_analysis ADD COLUMN judgments_json TEXT NOT NULL DEFAULT '[]';")
+            # Additive column for Part 4 judgments cache
+            tables = {row[0] for row in conn.exec_driver_sql("SELECT name FROM sqlite_master WHERE type='table';").fetchall()}
+            if "bare_act_ai_analysis" in tables:
+                analysis_cols = {row[1] for row in conn.exec_driver_sql("PRAGMA table_info(bare_act_ai_analysis);").fetchall()}
+                if "judgments_json" not in analysis_cols:
+                    conn.exec_driver_sql("ALTER TABLE bare_act_ai_analysis ADD COLUMN judgments_json TEXT NOT NULL DEFAULT '[]';")
 
-        # Additive columns for eCourts integration on matters
-        if "matters" in tables:
-            matter_cols = {row[1] for row in conn.exec_driver_sql("PRAGMA table_info(matters);").fetchall()}
-            if "cnr" not in matter_cols:
-                conn.exec_driver_sql("ALTER TABLE matters ADD COLUMN cnr VARCHAR(30);")
-            if "ecourts_synced_at" not in matter_cols:
-                conn.exec_driver_sql("ALTER TABLE matters ADD COLUMN ecourts_synced_at DATETIME;")
-            if "ecourts_data_json" not in matter_cols:
-                conn.exec_driver_sql("ALTER TABLE matters ADD COLUMN ecourts_data_json TEXT;")
+            # Additive columns for eCourts integration on matters
+            if "matters" in tables:
+                matter_cols = {row[1] for row in conn.exec_driver_sql("PRAGMA table_info(matters);").fetchall()}
+                if "cnr" not in matter_cols:
+                    conn.exec_driver_sql("ALTER TABLE matters ADD COLUMN cnr VARCHAR(30);")
+                if "ecourts_synced_at" not in matter_cols:
+                    conn.exec_driver_sql("ALTER TABLE matters ADD COLUMN ecourts_synced_at DATETIME;")
+                if "ecourts_data_json" not in matter_cols:
+                    conn.exec_driver_sql("ALTER TABLE matters ADD COLUMN ecourts_data_json TEXT;")
 
-        # Create eCourts cache tables if not present
-        Base.metadata.create_all(conn)
+            # Create eCourts cache tables if not present
+            Base.metadata.create_all(conn)
+    else:
+        # PostgreSQL / Supabase
+        with eng.begin() as conn:
+            Base.metadata.create_all(conn)
 
 

@@ -68,6 +68,7 @@ ehthumbs.db
 Thumbs.db
 
 # IDE & Editor Configurations
+.agents/
 .idea/
 .vscode/
 *.swp
