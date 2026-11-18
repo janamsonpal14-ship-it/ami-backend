@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import calendar
+import re
 from datetime import date, timedelta
 
 from sqlalchemy import select
@@ -8,10 +9,12 @@ from sqlalchemy.orm import Session, selectinload
 
 from app.models import (
     BareAct,
+    BareActSection,
     CalendarEvent,
     Client,
     ClientMatter,
     FeeMemo,
+    FeeMemoMatter,
     Hearing,
     HearingAdvocate,
     Matter,
@@ -529,59 +532,326 @@ def get_client_wise_report(db: Session, search: str | None = None) -> list[dict]
     return groups
 
 
+STOP_WORDS = {"of", "the", "in", "and", "to", "for", "a", "an", "is", "at", "by", "from", "with", "on", "vs"}
+
+LEGAL_SYNONYMS: dict[str, list[str]] = {
+    "anticipatory bail": ["apprehending arrest", "section 482", "section 438", "bail"],
+    "cheque bounce": ["dishonour of cheque", "section 138", "cheque", "negotiable instruments"],
+    "check bounce": ["dishonour of cheque", "section 138", "cheque", "negotiable instruments"],
+    "quashing": ["inherent powers", "section 528", "section 482"],
+    "fir": ["first information report"],
+    "cpc": ["code of civil procedure", "civil procedure"],
+    "crpc": ["code of criminal procedure", "bnss", "criminal procedure"],
+    "ipc": ["indian penal code", "bns", "penal code"],
+    "ni act": ["negotiable instruments"],
+    "posh": ["sexual harassment of women at workplace", "posh"],
+    "arbitration": ["arbitration and conciliation"],
+    "ibc": ["insolvency and bankruptcy"],
+    "sarfaesi": ["securitisation and reconstruction"],
+}
+
+
+def _clean_tokens(s: str) -> list[str]:
+    cleaned = re.sub(r"[\s\-_/\\,.:;()\[\]{}]+", " ", str(s).lower()).strip()
+    return [t for t in cleaned.split() if t and t not in STOP_WORDS]
+
+
+def _match_target(query: str, *fields: str | None) -> tuple[bool, int]:
+    full_text = " ".join([str(f) for f in fields if f])
+    if not full_text:
+        return False, 0
+    full_lower = full_text.lower()
+    full_clean = " " + " ".join(_clean_tokens(full_text)) + " "
+    full_compact = re.sub(r"[^a-z0-9]", "", full_lower)
+
+    q_lower = query.strip().lower()
+    q_tokens = _clean_tokens(query)
+    q_compact = re.sub(r"[^a-z0-9]", "", q_lower)
+
+    if not q_tokens:
+        return False, 0
+
+    score = 0
+    if q_lower in full_lower:
+        score += 100
+    elif len(q_compact) >= 3 and q_compact in full_compact:
+        score += 80
+
+    matched_tokens = 0
+    for qt in q_tokens:
+        if (" " + qt) in full_clean or any(tt.startswith(qt) for tt in _clean_tokens(full_text)):
+            matched_tokens += 1
+            score += 15
+        elif len(qt) >= 3 and qt in full_compact:
+            matched_tokens += 1
+            score += 10
+
+    if matched_tokens == len(q_tokens):
+        return True, score
+
+    if q_lower in LEGAL_SYNONYMS:
+        for syn in LEGAL_SYNONYMS[q_lower]:
+            syn_tokens = _clean_tokens(syn)
+            syn_matches = sum(
+                1 for st in syn_tokens if (" " + st) in full_clean or (len(st) >= 3 and st in full_compact)
+            )
+            if syn_matches == len(syn_tokens):
+                return True, 75
+
+    return False, 0
+
+
 def global_search(db: Session, query: str) -> dict:
-    """Cmd+K global search across clients, matters, hearings, memos, tasks, and bare acts."""
-    q = query.strip().lower()
+    """Cmd+K global search across clients, matters, hearings, memos, tasks, bare acts, and statutory sections."""
+    q = query.strip()
     if not q:
-        return {"clients": [], "matters": [], "hearings": [], "memos": [], "tasks": [], "bare_acts": []}
-
-    clients = [
-        {"id": c.id, "title": c.display_name, "subtitle": c.contact_info or "Client"}
-        for c in db.scalars(select(Client)).all()
-        if q in c.display_name.lower() or (c.notes and q in c.notes.lower())
-    ][:8]
-
-    matters = [
-        {"id": m.id, "title": m.title, "subtitle": f"{m.court_forum} • {m.case_number}"}
-        for m in db.scalars(select(Matter)).all()
-        if q in f"{m.title} {m.case_number} {m.court_forum} {m.current_stage}".lower()
-    ][:10]
-
-    hearings = [
-        {
-            "id": h.id,
-            "matter_id": h.matter_id,
-            "title": h.matter.title if h.matter else f"Matter #{h.matter_id}",
-            "subtitle": f"{format_indian_date(h.hearing_date)} — {h.business_conducted[:90]}",
+        return {
+            "clients": [],
+            "matters": [],
+            "hearings": [],
+            "memos": [],
+            "tasks": [],
+            "bare_acts": [],
+            "sections": [],
         }
-        for h in db.scalars(select(Hearing).options(selectinload(Hearing.matter))).all()
-        if q in h.business_conducted.lower() or (h.next_purpose and q in h.next_purpose.lower())
-    ][:8]
 
-    memos = [
-        {"id": m.id, "title": f"{m.bill_number} — {m.addressee_name}", "subtitle": f"{m.status}"}
-        for m in db.scalars(select(FeeMemo)).all()
-        if q in f"{m.bill_number} {m.addressee_name} {m.subject_line or ''}".lower()
-    ][:8]
+    # 1. Clients
+    client_candidates = db.scalars(
+        select(Client).options(selectinload(Client.matter_links))
+    ).all()
+    clients = []
+    for c in client_candidates:
+        m, sc = _match_target(q, c.display_name, c.normalized_name, c.contact_info, c.notes)
+        if m:
+            clients.append(
+                (
+                    sc,
+                    {
+                        "id": c.id,
+                        "title": c.display_name,
+                        "subtitle": f"{c.contact_info or 'Client'} • {len(c.matter_links)} matter(s)",
+                    },
+                )
+            )
+    clients.sort(key=lambda x: x[0], reverse=True)
+    clients = [x[1] for x in clients[:8]]
 
-    tasks = [
-        {"id": t.id, "title": t.title, "subtitle": f"{t.task_type} • {t.status}"}
-        for t in db.scalars(select(Task)).all()
-        if q in t.title.lower() or (t.notes and q in t.notes.lower())
-    ][:8]
+    # 2. Matters
+    matter_candidates = db.scalars(
+        select(Matter).options(
+            selectinload(Matter.client_links).selectinload(ClientMatter.client),
+            selectinload(Matter.advocate_links).selectinload(MatterAdvocate.advocate),
+        )
+    ).all()
+    matters = []
+    for m in matter_candidates:
+        c_names = " ".join([cl.client.display_name for cl in m.client_links if cl.client])
+        adv_names = " ".join([al.advocate.full_name for al in m.advocate_links if al.advocate])
+        matched, sc = _match_target(
+            q,
+            m.title,
+            m.case_number,
+            m.normalized_case_number,
+            m.court_forum,
+            m.current_stage,
+            m.cnr,
+            m.connected_cases,
+            m.notes,
+            c_names,
+            adv_names,
+        )
+        if matched:
+            display_title = m.title.split("\n")[0] if "\n" in m.title else m.title
+            subtitle_parts = [m.court_forum]
+            if m.case_number:
+                subtitle_parts.append(m.case_number)
+            if m.current_stage:
+                subtitle_parts.append(m.current_stage)
+            matters.append(
+                (
+                    sc,
+                    {
+                        "id": m.id,
+                        "title": display_title,
+                        "subtitle": " • ".join(subtitle_parts),
+                        "case_number": m.case_number,
+                        "court_forum": m.court_forum,
+                    },
+                )
+            )
+    matters.sort(key=lambda x: x[0], reverse=True)
+    matters = [x[1] for x in matters[:12]]
 
-    bare_acts = [
-        {"id": b.id, "title": b.title, "subtitle": f"{b.year or ''} • {b.tags or ''}"}
-        for b in db.scalars(select(BareAct)).all()
-        if q in f"{b.title} {b.short_title or ''} {b.tags or ''} {b.summary_text or ''}".lower()
-    ][:8]
+    # 3. Bare Acts
+    all_acts = {a.id: a for a in db.scalars(select(BareAct)).all()}
+    bare_acts = []
+    for a in all_acts.values():
+        matched, sc = _match_target(
+            q, a.title, a.short_title, a.tags, a.summary_text, a.category_slug
+        )
+        if matched:
+            subtitle_parts = []
+            if a.year:
+                subtitle_parts.append(str(a.year))
+            if a.short_title and a.short_title != a.title:
+                subtitle_parts.append(a.short_title)
+            elif a.tags:
+                subtitle_parts.append(a.tags.replace("_", " "))
+            bare_acts.append(
+                (
+                    sc,
+                    {
+                        "id": a.id,
+                        "title": a.title,
+                        "subtitle": " • ".join(subtitle_parts) if subtitle_parts else "Bare Act",
+                        "short_title": a.short_title,
+                    },
+                )
+            )
+    bare_acts.sort(key=lambda x: x[0], reverse=True)
+    bare_acts = [x[1] for x in bare_acts[:6]]
+
+    # 4. Statutory Sections
+    all_sections = db.scalars(select(BareActSection)).all()
+    sections = []
+    for s in all_sections:
+        act = all_acts.get(s.act_id)
+        act_title = act.short_title or act.title if act else ""
+        matched, sc = _match_target(
+            q, s.section_no, s.heading, act_title, s.body_text[:200]
+        )
+        if matched:
+            sections.append(
+                (
+                    sc,
+                    {
+                        "id": s.id,
+                        "act_id": s.act_id,
+                        "title": f"{act_title} — {s.section_no}",
+                        "subtitle": s.heading or (s.body_text[:120] if s.body_text else ""),
+                        "section_no": s.section_no,
+                        "act_title": act.title if act else "",
+                    },
+                )
+            )
+    sections.sort(key=lambda x: x[0], reverse=True)
+    sections = [x[1] for x in sections[:8]]
+
+    # 5. Hearings
+    hearings_candidates = db.scalars(
+        select(Hearing).options(selectinload(Hearing.matter))
+    ).all()
+    hearings = []
+    for h in hearings_candidates:
+        m_title = h.matter.title if h.matter else ""
+        m_case = h.matter.case_number if h.matter else ""
+        m_court = h.matter.court_forum if h.matter else ""
+        date_str = format_indian_date(h.hearing_date)
+        matched, sc = _match_target(
+            q,
+            h.business_conducted,
+            h.next_purpose,
+            h.exception_reason,
+            h.stage_at_hearing,
+            date_str,
+            str(h.hearing_date),
+            m_title,
+            m_case,
+            m_court,
+        )
+        if matched:
+            display_title = (
+                h.matter.title.split("\n")[0]
+                if h.matter and "\n" in h.matter.title
+                else (h.matter.title if h.matter else f"Matter #{h.matter_id}")
+            )
+            note_snip = (h.business_conducted or h.next_purpose or "Hearing entry")[:90]
+            hearings.append(
+                (
+                    sc,
+                    {
+                        "id": h.id,
+                        "matter_id": h.matter_id,
+                        "title": display_title,
+                        "subtitle": f"{date_str} — {note_snip}",
+                    },
+                )
+            )
+    hearings.sort(key=lambda x: x[0], reverse=True)
+    hearings = [x[1] for x in hearings[:8]]
+
+    # 6. Fee Memos
+    memo_candidates = db.scalars(
+        select(FeeMemo).options(
+            selectinload(FeeMemo.matter_links).selectinload(FeeMemoMatter.matter)
+        )
+    ).all()
+    memos = []
+    for fm in memo_candidates:
+        linked_matters = " ".join(
+            [fmm.matter.title for fmm in fm.matter_links if fmm.matter]
+        )
+        matched, sc = _match_target(
+            q,
+            fm.bill_number,
+            fm.addressee_name,
+            fm.subject_line,
+            fm.status,
+            fm.notes,
+            linked_matters,
+        )
+        if matched:
+            memos.append(
+                (
+                    sc,
+                    {
+                        "id": fm.id,
+                        "title": f"{fm.bill_number} — {fm.addressee_name}",
+                        "subtitle": f"Status: {fm.status} • ₹{fm.net_total:,.2f}",
+                    },
+                )
+            )
+    memos.sort(key=lambda x: x[0], reverse=True)
+    memos = [x[1] for x in memos[:8]]
+
+    # 7. Tasks
+    task_candidates = db.scalars(
+        select(Task).options(selectinload(Task.matter))
+    ).all()
+    tasks = []
+    for t in task_candidates:
+        m_title = t.matter.title if t.matter else ""
+        matched, sc = _match_target(
+            q,
+            t.title,
+            t.task_type,
+            t.priority,
+            t.status,
+            t.notes,
+            m_title,
+        )
+        if matched:
+            tasks.append(
+                (
+                    sc,
+                    {
+                        "id": t.id,
+                        "title": t.title,
+                        "subtitle": f"{t.task_type} • {t.priority} • {t.status}",
+                        "matter_id": t.matter_id,
+                    },
+                )
+            )
+    tasks.sort(key=lambda x: x[0], reverse=True)
+    tasks = [x[1] for x in tasks[:8]]
 
     return {
         "clients": clients,
         "matters": matters,
+        "sections": sections,
+        "bare_acts": bare_acts,
         "hearings": hearings,
         "memos": memos,
         "tasks": tasks,
-        "bare_acts": bare_acts,
     }
 
