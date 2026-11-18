@@ -260,10 +260,11 @@ def api_causelist_batch(
 @router.post("/matters/{matter_id}/sync")
 def api_sync_matter(
     matter_id: int,
+    force_refresh: bool = True,
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    return sync_matter_with_ecourts(db, matter_id=matter_id, force_refresh=True, actor=user.login_id)
+    return sync_matter_with_ecourts(db, matter_id=matter_id, force_refresh=force_refresh, actor=user.login_id)
 
 
 @router.post("/matters/{matter_id}/link-cnr")

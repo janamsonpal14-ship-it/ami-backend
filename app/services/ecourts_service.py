@@ -547,6 +547,80 @@ def check_causelist_batch(db: Session, cnrs: list[str]) -> dict[str, Any]:
 
 
 # ==============================================================================
+# Helper: Data Normalization & Status Parsing
+# ==============================================================================
+
+def _extract_court_case_data(detail: dict[str, Any]) -> dict[str, Any]:
+    """Extract case data whether returned from live eCourts API or cached flat format."""
+    if not detail:
+        return {}
+    if isinstance(detail.get("data"), dict) and "courtCaseData" in detail["data"]:
+        return detail["data"]["courtCaseData"]
+    if "courtCaseData" in detail and isinstance(detail["courtCaseData"], dict):
+        return detail["courtCaseData"]
+    return detail
+
+
+def _parse_ecourts_status(cdata: dict[str, Any]) -> tuple[bool, str, str | None, str | None, str | None]:
+    """Parse eCourts caseStatus, disposal nature, decision date, and next hearing date.
+
+    Returns:
+        is_disposed (bool): True if case was decided/disposed in court records
+        case_status (str): "Disposed" | "Active" | "Reserved"
+        disposal_nature (str | None): e.g. "Dismissed", "Allowed", "Settled in Lok Adalat"
+        date_of_decision (str | None): e.g. "2026-10-29"
+        next_hearing_date (str | None): e.g. "2026-12-02"
+    """
+    raw_status = str(cdata.get("caseStatus") or cdata.get("status") or "").strip().upper()
+
+    disp_name = (
+        cdata.get("natureOfDisposal")
+        or cdata.get("disposalNature")
+        or cdata.get("disp_name")
+        or cdata.get("ldisp_name")
+    )
+    if disp_name and isinstance(disp_name, str):
+        disp_name = disp_name.strip()
+        if disp_name.upper() in ("NONE", "NULL", ""):
+            disp_name = None
+
+    date_of_decision = (
+        cdata.get("dateOfDisposal")
+        or cdata.get("decisionDate")
+        or cdata.get("date_of_decision")
+    )
+    if date_of_decision and isinstance(date_of_decision, str):
+        date_of_decision = date_of_decision.strip()
+        if date_of_decision.upper() in ("NONE", "NULL", ""):
+            date_of_decision = None
+
+    is_disposed = (
+        raw_status == "DISPOSED"
+        or bool(disp_name)
+        or bool(date_of_decision)
+    )
+
+    if is_disposed:
+        return True, "Disposed", disp_name, date_of_decision, None
+
+    stage_upper = str(cdata.get("stageOfCase") or cdata.get("purpose_name") or cdata.get("purpose") or "").strip().upper()
+    if raw_status in ("RESERVED", "ORDER RESERVED", "RESERVED FOR ORDERS") or stage_upper in (
+        "ORDER RESERVED",
+        "RESERVED FOR ORDERS",
+        "ORDER",
+    ):
+        return False, "Reserved", None, None, None
+
+    next_date = cdata.get("nextHearingDate") or cdata.get("date_next_list")
+    if next_date and isinstance(next_date, str):
+        next_date = next_date.strip()
+        if next_date.upper() in ("NONE", "NULL", ""):
+            next_date = None
+
+    return False, "Active", None, None, next_date
+
+
+# ==============================================================================
 # Matter Sync ("eCourts API will prevail")
 # ==============================================================================
 
@@ -558,6 +632,8 @@ def sync_matter_with_ecourts(
     actor: str = "system",
 ) -> dict[str, Any]:
     """Sync a matter with official eCourts records. eCourts data prevails on court docket fields."""
+    from app.services.hearing_service import sync_calendar_event_for_matter
+
     matter = db.get(Matter, matter_id)
     if not matter:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Matter not found.")
@@ -571,12 +647,13 @@ def sync_matter_with_ecourts(
 
     # 1. Fetch case details from eCourts
     detail = get_case_detail(db, target_cnr, force_refresh=force_refresh)
-    cdata = detail.get("data", {}).get("courtCaseData", {})
+    cdata = _extract_court_case_data(detail)
 
     old_state = {
         "court_forum": matter.court_forum,
         "case_number": matter.case_number,
         "current_stage": matter.current_stage,
+        "status": matter.status,
         "current_next_date": matter.current_next_date.isoformat() if matter.current_next_date else None,
         "current_next_purpose": matter.current_next_purpose,
         "cnr": matter.cnr,
@@ -584,47 +661,52 @@ def sync_matter_with_ecourts(
 
     # 2. eCourts API Prevails on Court Docket Fields
     matter.cnr = target_cnr
-    official_court = cdata.get("courtName") or cdata.get("courtComplex")
-    if official_court and len(official_court.strip()) > 2:
-        matter.court_forum = official_court.strip()
+    official_court = (
+        cdata.get("courtName")
+        or cdata.get("courtComplex")
+        or cdata.get("court_no_desg_name")
+        or cdata.get("establishment_name")
+    )
+    if official_court and len(str(official_court).strip()) > 2:
+        matter.court_forum = str(official_court).strip()
 
-    official_case_no = cdata.get("registrationNumber") or cdata.get("caseNumber")
-    if official_case_no and len(official_case_no.strip()) > 0:
-        matter.case_number = official_case_no.strip()
+    official_case_no = (
+        cdata.get("registrationNumber")
+        or cdata.get("caseNumber")
+        or cdata.get("case_no")
+    )
+    if official_case_no and len(str(official_case_no).strip()) > 0:
+        matter.case_number = str(official_case_no).strip()
 
-    official_stage = cdata.get("stageOfCase")
-    if official_stage and len(official_stage.strip()) > 0:
-        matter.current_stage = official_stage.strip().title()
+    is_disposed, case_status, disp_name, date_of_decision, next_date_str = _parse_ecourts_status(cdata)
 
-    next_dt_str = cdata.get("nextHearingDate")
-    if next_dt_str:
-        try:
-            parsed_dt = datetime.strptime(next_dt_str.strip(), "%Y-%m-%d").date()
-            matter.current_next_date = parsed_dt
+    if is_disposed:
+        matter.status = "Disposed"
+        disp_label = disp_name.strip() if disp_name else "Disposed by Court"
+        matter.current_stage = disp_label.title()
+        matter.current_next_purpose = f"Disposed: {disp_label}"
+        matter.current_next_date = None
+        sync_calendar_event_for_matter(db, matter)
+    elif case_status == "Reserved":
+        matter.status = "Reserved"
+        matter.current_stage = "Reserved for Orders"
+        matter.current_next_purpose = "Reserved for Orders"
+        matter.current_next_date = None
+        sync_calendar_event_for_matter(db, matter)
+    else:
+        if matter.status == "Disposed":
+            matter.status = "Active"
+        official_stage = cdata.get("stageOfCase") or cdata.get("purpose_name") or cdata.get("purpose")
+        if official_stage and len(str(official_stage).strip()) > 0:
+            matter.current_stage = str(official_stage).strip().title()
 
-            # Sync or create Calendar Event for the upcoming hearing
-            existing_event = db.scalar(
-                select(CalendarEvent).where(
-                    CalendarEvent.matter_id == matter.id,
-                    CalendarEvent.event_date == parsed_dt,
-                    CalendarEvent.event_type == "Court",
-                )
-            )
-            if not existing_event:
-                db.add(
-                    CalendarEvent(
-                        title=f"{matter.title} ({matter.court_forum})",
-                        event_date=parsed_dt,
-                        event_type="Court",
-                        court_forum=matter.court_forum,
-                        matter_id=matter.id,
-                        notes=f"Auto-synced from eCourts (Stage: {matter.current_stage})",
-                        status="Active",
-                        is_demo=False,
-                    )
-                )
-        except Exception:
-            pass
+        if next_date_str:
+            try:
+                parsed_dt = datetime.strptime(next_date_str.strip(), "%Y-%m-%d").date()
+                matter.current_next_date = parsed_dt
+                sync_calendar_event_for_matter(db, matter)
+            except Exception:
+                pass
 
     matter.ecourts_synced_at = ist_now()
     matter.ecourts_data_json = json.dumps(detail, ensure_ascii=False)
@@ -640,6 +722,7 @@ def sync_matter_with_ecourts(
             "court_forum": matter.court_forum,
             "case_number": matter.case_number,
             "current_stage": matter.current_stage,
+            "status": matter.status,
             "current_next_date": matter.current_next_date.isoformat() if matter.current_next_date else None,
             "cnr": matter.cnr,
         },
@@ -653,9 +736,25 @@ def sync_matter_with_ecourts(
         "court_forum": matter.court_forum,
         "case_number": matter.case_number,
         "current_stage": matter.current_stage,
+        "case_status": matter.status,
+        "matter_status": matter.status,
+        "is_disposed": is_disposed,
+        "disposal_nature": disp_name,
+        "date_of_decision": str(date_of_decision) if date_of_decision else None,
         "current_next_date": matter.current_next_date.isoformat() if matter.current_next_date else None,
+        "current_next_purpose": matter.current_next_purpose,
         "orders_count": len(cdata.get("orders", []) or cdata.get("judgmentOrders", [])),
         "synced_at": matter.ecourts_synced_at.isoformat(),
+        "matter": {
+            "id": matter.id,
+            "status": matter.status,
+            "current_stage": matter.current_stage,
+            "current_next_date": matter.current_next_date.isoformat() if matter.current_next_date else None,
+            "current_next_purpose": matter.current_next_purpose,
+            "court_forum": matter.court_forum,
+            "case_number": matter.case_number,
+            "cnr": matter.cnr,
+        },
     }
 
 
@@ -676,20 +775,41 @@ def enrich_pending_eod_with_ecourts(db: Session, pending_items: list[dict[str, A
             try:
                 # Check cache first to avoid unnecessary charge; if expired or empty, fetch
                 detail = get_case_detail(db, matter.cnr, force_refresh=False)
-                cdata = detail.get("data", {}).get("courtCaseData", {})
-                ecourts_next_date = cdata.get("nextHearingDate")
-                ecourts_stage = cdata.get("stageOfCase")
-                ecourts_purpose = cdata.get("stageOfCase")
+                cdata = _extract_court_case_data(detail)
 
-                if ecourts_next_date:
+                is_disposed, case_status, disp_name, date_of_decision, next_hearing_date = _parse_ecourts_status(cdata)
+                ecourts_stage = cdata.get("stageOfCase") or cdata.get("purpose_name")
+                ecourts_purpose = cdata.get("purpose") or cdata.get("purpose_name") or cdata.get("stageOfCase")
+
+                if is_disposed:
                     item_copy["ecourts_auto_found"] = True
-                    item_copy["ecourts_next_date"] = ecourts_next_date
+                    item_copy["ecourts_case_status"] = "Disposed"
+                    item_copy["ecourts_disposal_nature"] = disp_name
+                    item_copy["ecourts_disposal_date"] = str(date_of_decision) if date_of_decision else None
+                    item_copy["ecourts_stage"] = disp_name or "Disposed"
+                    disp_str = f" ({disp_name})" if disp_name else ""
+                    dt_str = f" on {date_of_decision}" if date_of_decision else ""
+                    item_copy["ecourts_proposal"] = f"Court marked DISPOSED{disp_str}{dt_str}."
+                elif case_status == "Reserved":
+                    item_copy["ecourts_auto_found"] = True
+                    item_copy["ecourts_case_status"] = "Reserved"
+                    item_copy["ecourts_stage"] = "Reserved for Orders"
+                    item_copy["ecourts_proposal"] = "Court reserved order."
+                elif next_hearing_date:
+                    item_copy["ecourts_auto_found"] = True
+                    item_copy["ecourts_case_status"] = "Active"
+                    item_copy["ecourts_next_date"] = str(next_hearing_date)
                     item_copy["ecourts_stage"] = ecourts_stage
+                    item_copy["ecourts_purpose"] = ecourts_purpose
                     item_copy["ecourts_proposal"] = (
-                        f"Court fixed next date: {ecourts_next_date} ({ecourts_stage or 'Listed'})."
+                        f"Court fixed next date: {next_hearing_date} ({ecourts_stage or ecourts_purpose or 'Listed'})."
                     )
                 else:
                     item_copy["ecourts_auto_found"] = False
+                    item_copy["ecourts_case_status"] = "Active"
+                    if ecourts_stage or ecourts_purpose:
+                        item_copy["ecourts_stage"] = ecourts_stage
+                        item_copy["ecourts_purpose"] = ecourts_purpose
             except Exception as e:
                 item_copy["ecourts_auto_found"] = False
                 item_copy["ecourts_error"] = str(e)

@@ -32,8 +32,22 @@ def _board_for_range(db: Session, start_date: date, end_date: date) -> list[dict
     # Sort chronologically by event_date, then start_time
     events.sort(key=lambda ev: (ev.event_date, ev.start_time or "99:99", ev.id))
     board: list[dict] = []
+    # Pre-fetch matters for efficient lookup
+    matter_ids = {ev.matter_id for ev in events if ev.matter_id is not None}
+    matter_map = {}
+    if matter_ids:
+        matters = list(
+            db.scalars(
+                select(Matter)
+                .options(selectinload(Matter.advocate_links))
+                .where(Matter.id.in_(matter_ids))
+            ).all()
+        )
+        matter_map = {m.id: m for m in matters}
+
     for ev in events:
         update_status = None
+        m = matter_map.get(ev.matter_id) if ev.matter_id is not None else None
         if ev.event_type == "Court" and ev.matter_id is not None:
             hearing = db.scalar(
                 select(Hearing).where(
@@ -60,6 +74,12 @@ def _board_for_range(db: Session, start_date: date, end_date: date) -> list[dict
                 "location": ev.location,
                 "notes": ev.notes,
                 "matter_id": ev.matter_id,
+                "cnr": m.cnr if m else None,
+                "case_number": m.case_number if m else None,
+                "court_forum": m.court_forum if (m and m.court_forum) else ev.location,
+                "current_stage": m.current_stage if m else None,
+                "matter_status": m.status if m else None,
+                "default_advocate_ids": [link.advocate_id for link in m.advocate_links] if m else [],
                 "advocates": [a.model_dump() for a in ev.advocates],
                 "update_status": update_status,
                 "clash_warnings": [w.model_dump() for w in ev.clash_warnings],
