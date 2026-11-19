@@ -289,21 +289,48 @@ def api_sync_all_matters(
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
+    import json
     from sqlalchemy import select
-    from app.models import Matter
+    from sqlalchemy.orm import selectinload
+    from app.models import Matter, CalendarEvent, ECourtsCaseCache
     from app.services.hearing_service import sync_all_active_matters_calendar
 
     matters = list(
         db.scalars(
-            select(Matter).where(Matter.cnr.is_not(None), Matter.cnr != "")
+            select(Matter)
+            .options(selectinload(Matter.advocate_links))
+            .where(Matter.cnr.is_not(None), Matter.cnr != "")
         ).all()
     )
+
+    all_events = list(
+        db.scalars(
+            select(CalendarEvent)
+            .options(selectinload(CalendarEvent.advocate_links))
+            .where(CalendarEvent.matter_id.is_not(None))
+        ).all()
+    )
+    events_by_matter: dict[int, list[CalendarEvent]] = {}
+    for ev in all_events:
+        if ev.matter_id:
+            events_by_matter.setdefault(ev.matter_id, []).append(ev)
+
+    caches: dict[str, Any] = {}
+    if not force_refresh:
+        for c in db.scalars(select(ECourtsCaseCache)).all():
+            if c.cnr and c.data_json:
+                try:
+                    caches[c.cnr] = json.loads(c.data_json)
+                except Exception:
+                    pass
+
     synced = 0
     disposed = 0
     active = 0
     errors: list[dict] = []
 
     for m in matters:
+        clean_cnr = m.cnr.strip().upper() if m.cnr else None
         try:
             res = sync_matter_with_ecourts(
                 db,
@@ -311,6 +338,8 @@ def api_sync_all_matters(
                 force_refresh=force_refresh,
                 actor=user.login_id,
                 auto_commit=False,
+                preloaded_detail=caches.get(clean_cnr) if clean_cnr else None,
+                existing_events=events_by_matter.get(m.id, []),
             )
             synced += 1
             if res.get("is_disposed") or res.get("case_status") == "Disposed":
@@ -322,7 +351,7 @@ def api_sync_all_matters(
 
     db.commit()
 
-    calendar_synced = sync_all_active_matters_calendar(db)
+    calendar_synced = sync_all_active_matters_calendar(db, preloaded_events=all_events)
 
     return {
         "success": True,

@@ -632,6 +632,8 @@ def sync_matter_with_ecourts(
     force_refresh: bool = True,
     actor: str = "system",
     auto_commit: bool = True,
+    preloaded_detail: dict[str, Any] | None = None,
+    existing_events: list[CalendarEvent] | None = None,
 ) -> dict[str, Any]:
     """Sync a matter with official eCourts records. eCourts data prevails on court docket fields."""
     from app.services.hearing_service import sync_calendar_event_for_matter
@@ -648,7 +650,10 @@ def sync_matter_with_ecourts(
         )
 
     # 1. Fetch case details from eCourts
-    detail = get_case_detail(db, target_cnr, force_refresh=force_refresh)
+    if preloaded_detail:
+        detail = preloaded_detail
+    else:
+        detail = get_case_detail(db, target_cnr, force_refresh=force_refresh)
     cdata = _extract_court_case_data(detail)
 
     old_state = {
@@ -698,13 +703,13 @@ def sync_matter_with_ecourts(
         matter.current_stage = disp_label.title()
         matter.current_next_purpose = f"Disposed: {disp_label}"
         matter.current_next_date = None
-        sync_calendar_event_for_matter(db, matter)
+        sync_calendar_event_for_matter(db, matter, existing_events=existing_events)
     elif case_status == "Reserved":
         matter.status = "Reserved"
         matter.current_stage = "Reserved for Orders"
         matter.current_next_purpose = "Reserved for Orders"
         matter.current_next_date = None
-        sync_calendar_event_for_matter(db, matter)
+        sync_calendar_event_for_matter(db, matter, existing_events=existing_events)
     else:
         if matter.status == "Disposed":
             matter.status = "Active"
@@ -716,7 +721,7 @@ def sync_matter_with_ecourts(
             try:
                 parsed_dt = datetime.strptime(next_date_str.strip(), "%Y-%m-%d").date()
                 matter.current_next_date = parsed_dt
-                sync_calendar_event_for_matter(db, matter)
+                sync_calendar_event_for_matter(db, matter, existing_events=existing_events)
             except Exception:
                 pass
 

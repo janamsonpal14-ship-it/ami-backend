@@ -95,6 +95,7 @@ def sync_calendar_event_for_matter(
     matter: Matter,
     advocate_ids: list[int] | None = None,
     source_hearing_id: int | None = None,
+    existing_events: list[CalendarEvent] | None = None,
 ) -> CalendarEvent | None:
     """
     Guarantees that whenever a matter's next date is set or changed in ANY part of the app
@@ -106,15 +107,18 @@ def sync_calendar_event_for_matter(
 
     if matter.status in ("Archived", "Disposed") or matter.current_next_date is None:
         # Cancel any active future calendar events for this matter
-        future_events = list(
-            db.scalars(
-                select(CalendarEvent).where(
-                    CalendarEvent.matter_id == matter.id,
-                    CalendarEvent.event_date >= today,
-                    CalendarEvent.status == "Active",
-                )
-            ).all()
-        )
+        if existing_events is not None:
+            future_events = [ev for ev in existing_events if ev.event_date >= today and ev.status == "Active"]
+        else:
+            future_events = list(
+                db.scalars(
+                    select(CalendarEvent).where(
+                        CalendarEvent.matter_id == matter.id,
+                        CalendarEvent.event_date >= today,
+                        CalendarEvent.status == "Active",
+                    )
+                ).all()
+            )
         for ev in future_events:
             ev.status = "Cancelled"
         return None
@@ -124,36 +128,44 @@ def sync_calendar_event_for_matter(
 
     event: CalendarEvent | None = None
 
-    # 1. If linked to a specific hearing, reuse that hearing's calendar event (avoids UNIQUE source_hearing_id collision)
-    if source_hearing_id is not None:
-        event = db.scalar(
-            select(CalendarEvent)
-            .options(selectinload(CalendarEvent.advocate_links))
-            .where(CalendarEvent.source_hearing_id == source_hearing_id)
-        )
-
-    # 2. If not found by source_hearing_id, check for an existing event for this matter on matter.current_next_date
-    if event is None:
-        event = db.scalar(
-            select(CalendarEvent)
-            .options(selectinload(CalendarEvent.advocate_links))
-            .where(
-                CalendarEvent.matter_id == matter.id,
-                CalendarEvent.event_date == matter.current_next_date,
+    if existing_events is not None:
+        if source_hearing_id is not None:
+            event = next((e for e in existing_events if e.source_hearing_id == source_hearing_id), None)
+        if event is None:
+            event = next((e for e in existing_events if e.event_date == matter.current_next_date), None)
+        if event is None:
+            event = next((e for e in existing_events if e.event_date >= today and e.source_hearing_id is None), None)
+    else:
+        # 1. If linked to a specific hearing, reuse that hearing's calendar event (avoids UNIQUE source_hearing_id collision)
+        if source_hearing_id is not None:
+            event = db.scalar(
+                select(CalendarEvent)
+                .options(selectinload(CalendarEvent.advocate_links))
+                .where(CalendarEvent.source_hearing_id == source_hearing_id)
             )
-        )
 
-    # 3. If still not found, check if there's any orphaned future event for this matter (with no source_hearing_id)
-    if event is None:
-        event = db.scalar(
-            select(CalendarEvent)
-            .options(selectinload(CalendarEvent.advocate_links))
-            .where(
-                CalendarEvent.matter_id == matter.id,
-                CalendarEvent.event_date >= today,
-                CalendarEvent.source_hearing_id.is_(None),
+        # 2. If not found by source_hearing_id, check for an existing event for this matter on matter.current_next_date
+        if event is None:
+            event = db.scalar(
+                select(CalendarEvent)
+                .options(selectinload(CalendarEvent.advocate_links))
+                .where(
+                    CalendarEvent.matter_id == matter.id,
+                    CalendarEvent.event_date == matter.current_next_date,
+                )
             )
-        )
+
+        # 3. If still not found, check if there's any orphaned future event for this matter (with no source_hearing_id)
+        if event is None:
+            event = db.scalar(
+                select(CalendarEvent)
+                .options(selectinload(CalendarEvent.advocate_links))
+                .where(
+                    CalendarEvent.matter_id == matter.id,
+                    CalendarEvent.event_date >= today,
+                    CalendarEvent.source_hearing_id.is_(None),
+                )
+            )
 
     if event is None:
         event = CalendarEvent(
@@ -169,6 +181,8 @@ def sync_calendar_event_for_matter(
         )
         db.add(event)
         db.flush()
+        if existing_events is not None:
+            existing_events.append(event)
     else:
         event.title = title
         event.event_date = matter.current_next_date
@@ -181,31 +195,48 @@ def sync_calendar_event_for_matter(
         db.flush()
 
     # Cancel any OTHER active future calendar events on DIFFERENT dates for this matter
-    obsolete_future = list(
-        db.scalars(
-            select(CalendarEvent).where(
-                CalendarEvent.matter_id == matter.id,
-                CalendarEvent.id != event.id,
-                CalendarEvent.event_date >= today,
-                CalendarEvent.event_date != matter.current_next_date,
-                CalendarEvent.status == "Active",
-            )
-        ).all()
-    )
+    if existing_events is not None:
+        obsolete_future = [
+            obs for obs in existing_events
+            if obs.id != event.id
+            and obs.event_date >= today
+            and obs.event_date != matter.current_next_date
+            and obs.status == "Active"
+        ]
+    else:
+        obsolete_future = list(
+            db.scalars(
+                select(CalendarEvent).where(
+                    CalendarEvent.matter_id == matter.id,
+                    CalendarEvent.id != event.id,
+                    CalendarEvent.event_date >= today,
+                    CalendarEvent.event_date != matter.current_next_date,
+                    CalendarEvent.status == "Active",
+                )
+            ).all()
+        )
     for obs in obsolete_future:
         obs.status = "Cancelled"
 
     # Cancel any duplicates on the same date
-    same_date_duplicates = list(
-        db.scalars(
-            select(CalendarEvent).where(
-                CalendarEvent.matter_id == matter.id,
-                CalendarEvent.id != event.id,
-                CalendarEvent.event_date == matter.current_next_date,
-                CalendarEvent.status == "Active",
-            )
-        ).all()
-    )
+    if existing_events is not None:
+        same_date_duplicates = [
+            dup for dup in existing_events
+            if dup.id != event.id
+            and dup.event_date == matter.current_next_date
+            and dup.status == "Active"
+        ]
+    else:
+        same_date_duplicates = list(
+            db.scalars(
+                select(CalendarEvent).where(
+                    CalendarEvent.matter_id == matter.id,
+                    CalendarEvent.id != event.id,
+                    CalendarEvent.event_date == matter.current_next_date,
+                    CalendarEvent.status == "Active",
+                )
+            ).all()
+        )
     for dup in same_date_duplicates:
         dup.status = "Cancelled"
 
@@ -223,7 +254,7 @@ def sync_calendar_event_for_matter(
     return event
 
 
-def sync_all_active_matters_calendar(db: Session) -> int:
+def sync_all_active_matters_calendar(db: Session, preloaded_events: list[CalendarEvent] | None = None) -> int:
     """Ensure every active matter with current_next_date has an active calendar event, and clean up disposed/cancelled ones."""
     matters = list(
         db.scalars(
@@ -231,9 +262,24 @@ def sync_all_active_matters_calendar(db: Session) -> int:
             .options(selectinload(Matter.advocate_links))
         ).all()
     )
+    if preloaded_events is not None:
+        all_events = preloaded_events
+    else:
+        all_events = list(
+            db.scalars(
+                select(CalendarEvent)
+                .options(selectinload(CalendarEvent.advocate_links))
+                .where(CalendarEvent.matter_id.is_not(None))
+            ).all()
+        )
+    events_by_matter: dict[int, list[CalendarEvent]] = {}
+    for ev in all_events:
+        if ev.matter_id:
+            events_by_matter.setdefault(ev.matter_id, []).append(ev)
+
     count = 0
     for m in matters:
-        sync_calendar_event_for_matter(db, m)
+        sync_calendar_event_for_matter(db, m, existing_events=events_by_matter.get(m.id, []))
         if m.status not in ("Archived", "Disposed") and m.current_next_date is not None:
             count += 1
     db.commit()
