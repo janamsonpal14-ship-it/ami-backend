@@ -224,21 +224,18 @@ def sync_calendar_event_for_matter(
 
 
 def sync_all_active_matters_calendar(db: Session) -> int:
-    """Ensure every active matter with current_next_date has an active calendar event."""
+    """Ensure every active matter with current_next_date has an active calendar event, and clean up disposed/cancelled ones."""
     matters = list(
         db.scalars(
             select(Matter)
             .options(selectinload(Matter.advocate_links))
-            .where(
-                Matter.current_next_date.is_not(None),
-                Matter.status != "Archived",
-            )
         ).all()
     )
     count = 0
     for m in matters:
         sync_calendar_event_for_matter(db, m)
-        count += 1
+        if m.status not in ("Archived", "Disposed") and m.current_next_date is not None:
+            count += 1
     db.commit()
     return count
 

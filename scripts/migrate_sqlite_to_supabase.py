@@ -107,13 +107,18 @@ def migrate():
         col_list_str = ", ".join(f'"{c}"' for c in valid_cols)
         placeholders = ", ".join("%s" for _ in valid_cols)
 
-        # Build conflict clause: if table has PK, use it or plain DO NOTHING
+        # Build conflict clause: if table has PK, DO UPDATE to synchronize existing rows
         pks = [c.name for c in table_obj.primary_key.columns]
         if pks:
             pk_str = ", ".join(f'"{p}"' for p in pks)
-            conflict_clause = f"ON CONFLICT ({pk_str}) DO NOTHING"
+            update_cols = [c for c in valid_cols if c not in pks]
+            if update_cols:
+                update_set = ", ".join(f'"{c}" = EXCLUDED."{c}"' for c in update_cols)
+                conflict_clause = f"ON CONFLICT ({pk_str}) DO UPDATE SET {update_set}"
+            else:
+                conflict_clause = f"ON CONFLICT ({pk_str}) DO NOTHING"
         else:
-            conflict_clause = "ON CONFLICT DO NOTHING"
+            conflict_clause = ""
 
         insert_sql = f'INSERT INTO "{table}" ({col_list_str}) VALUES ({placeholders}) {conflict_clause};'
 

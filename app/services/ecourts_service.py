@@ -23,6 +23,7 @@ from app.models import (
     ist_now,
 )
 from app.utils.indian_format import ist_today
+from app.utils.security import normalize_case_number
 from app.services.audit_service import record_audit
 
 logger = logging.getLogger(__name__)
@@ -668,15 +669,25 @@ def sync_matter_with_ecourts(
         or cdata.get("establishment_name")
     )
     if official_court and len(str(official_court).strip()) > 2:
-        matter.court_forum = str(official_court).strip()
+        court_str = str(official_court).strip()
+        if court_str.upper() in ("HCHC", "HCBM", "HCBM01", "HCBM02"):
+            matter.court_forum = "Bombay High Court"
+        elif not (matter.court_forum and "High Court" in matter.court_forum and court_str.upper().startswith("HC")):
+            matter.court_forum = court_str.title()
 
-    official_case_no = (
-        cdata.get("registrationNumber")
-        or cdata.get("caseNumber")
-        or cdata.get("case_no")
-    )
+    raw_type = cdata.get("caseTypeRaw") or cdata.get("type_name")
+    reg_num = cdata.get("registrationNumber") or cdata.get("reg_no")
+    if raw_type and reg_num and "/" in str(reg_num):
+        official_case_no = f"{raw_type} {reg_num}".strip()
+    else:
+        official_case_no = (
+            cdata.get("registrationNumber")
+            or cdata.get("caseNumber")
+            or cdata.get("case_no")
+        )
     if official_case_no and len(str(official_case_no).strip()) > 0:
         matter.case_number = str(official_case_no).strip()
+        matter.normalized_case_number = normalize_case_number(matter.case_number)
 
     is_disposed, case_status, disp_name, date_of_decision, next_date_str = _parse_ecourts_status(cdata)
 

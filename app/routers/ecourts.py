@@ -282,3 +282,52 @@ def api_link_cnr(
         actor=user.login_id,
     )
 
+
+@router.post("/matters/sync-all")
+def api_sync_all_matters(
+    force_refresh: bool = Query(default=True),
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    from sqlalchemy import select
+    from app.models import Matter
+    from app.services.hearing_service import sync_all_active_matters_calendar
+
+    matters = list(
+        db.scalars(
+            select(Matter).where(Matter.cnr.is_not(None), Matter.cnr != "")
+        ).all()
+    )
+    synced = 0
+    disposed = 0
+    active = 0
+    errors: list[dict] = []
+
+    for m in matters:
+        try:
+            res = sync_matter_with_ecourts(
+                db,
+                matter_id=m.id,
+                force_refresh=force_refresh,
+                actor=user.login_id,
+            )
+            synced += 1
+            if res.get("is_disposed") or res.get("case_status") == "Disposed":
+                disposed += 1
+            else:
+                active += 1
+        except Exception as e:
+            errors.append({"matter_id": m.id, "cnr": m.cnr, "error": str(e)})
+
+    calendar_synced = sync_all_active_matters_calendar(db)
+
+    return {
+        "success": True,
+        "total_matters_with_cnr": len(matters),
+        "synced": synced,
+        "disposed": disposed,
+        "active": active,
+        "calendar_synced": calendar_synced,
+        "errors": errors,
+    }
+
