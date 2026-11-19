@@ -3,5 +3,10 @@
   "env": {
     "AMI_DATA_DIR": "/tmp/data",
     "PYTHONUNBUFFERED": "1"
+  },
+  "functions": {
+    "api/**/*.py": {
+      "maxDuration": 60
+    }
   }
 }

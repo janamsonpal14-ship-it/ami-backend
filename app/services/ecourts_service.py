@@ -631,6 +631,7 @@ def sync_matter_with_ecourts(
     cnr: str | None = None,
     force_refresh: bool = True,
     actor: str = "system",
+    auto_commit: bool = True,
 ) -> dict[str, Any]:
     """Sync a matter with official eCourts records. eCourts data prevails on court docket fields."""
     from app.services.hearing_service import sync_calendar_event_for_matter
@@ -738,7 +739,10 @@ def sync_matter_with_ecourts(
             "cnr": matter.cnr,
         },
     )
-    db.commit()
+    if auto_commit:
+        db.commit()
+    else:
+        db.flush()
 
     return {
         "status": "synced",

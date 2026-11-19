@@ -285,7 +285,7 @@ def api_link_cnr(
 
 @router.post("/matters/sync-all")
 def api_sync_all_matters(
-    force_refresh: bool = Query(default=True),
+    force_refresh: bool = Query(default=False),
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -310,6 +310,7 @@ def api_sync_all_matters(
                 matter_id=m.id,
                 force_refresh=force_refresh,
                 actor=user.login_id,
+                auto_commit=False,
             )
             synced += 1
             if res.get("is_disposed") or res.get("case_status") == "Disposed":
@@ -318,6 +319,8 @@ def api_sync_all_matters(
                 active += 1
         except Exception as e:
             errors.append({"matter_id": m.id, "cnr": m.cnr, "error": str(e)})
+
+    db.commit()
 
     calendar_synced = sync_all_active_matters_calendar(db)
 
